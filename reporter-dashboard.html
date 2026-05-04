@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Aegis Safe Community</title>
+    <link rel="stylesheet" href="styles/global.css">
+    <link rel="stylesheet" href="styles/components.css">
+</head>
+
+<body class="dashboard-body">
+
+    <nav class="side-drawer glass-card">
+        <div class="nav-logo">AEGIS</div>
+        <ul class="nav-links">
+            <li class="active">📊 Feed</li>
+            <li>📍 Map</li>
+            <li>📁 My Reports</li>
+            <li>⚙️ Settings</li>
+        </ul>
+    </nav>
+
+    <main class="dashboard-content">
+        <header class="content-header">
+            <h2>Community Feed</h2>
+            <button class="btn-primary" id="reportBtn">+ REPORT INCIDENT</button>
+        </header>
+
+        <section class="feed-grid">
+            <div class="glass-card incident-card">
+                <div class="card-header">
+                    <span class="status-badge alert">Urgent</span>
+                    <span class="time">2 mins ago</span>
+                </div>
+                <h3>Suspicious Activity</h3>
+                <p>Observed unauthorized entry attempt near Sector 4 warehouse.</p>
+                <div class="card-footer">
+                    <span>📍 Central District</span>
+                </div>
+            </div>
+
+            <div class="glass-card incident-card">
+                <div class="card-header">
+                    <span class="status-badge info">Resolved</span>
+                    <span class="time">1 hour ago</span>
+                </div>
+                <h3>Street Light Outage</h3>
+                <p>Main intersection lighting is non-functional, creating a safety hazard.</p>
+                <div class="card-footer">
+                    <span>📍 West End</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="scripts/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Registration | Aegis</title>
+    <link rel="stylesheet" href="styles/global.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <style>
+        .reg-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .reg-box {
+            width: 100%;
+            max-width: 550px;
+            padding: 3rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        .badge-input {
+            border-left: 4px solid var(--dodger-blue) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reg-container">
+        <div class="glass-card reg-box">
+            <h2 style="font-family: var(--font-heading); color: var(--dodger-blue);">Official Enrollment</h2>
+            <p style="margin-bottom: 2rem; font-size: 0.9rem; color: #aaa;">Security Personnel & Law Enforcement Portal
+            </p>
+
+            <form class="form-grid">
+                <div class="input-group">
+                    <label>First Name</label>
+                    <input type="text" placeholder="John" required>
+                </div>
+                <div class="input-group">
+                    <label>Last Name</label>
+                    <input type="text" placeholder="Doe" required>
+                </div>
+                <div class="input-group full-width">
+                    <label>Organization / Agency</label>
+                    <input type="text" placeholder="e.g. Metropolitan Police" required>
+                </div>
+                <div class="input-group full-width">
+                    <label>Official Badge / ID Number</label>
+                    <input type="text" class="badge-input" placeholder="ID-998234" required>
+                </div>
+                <div class="input-group full-width">
+                    <label>Work Email</label>
+                    <input type="text" placeholder="name@agency.gov">
+                </div>
+                <button type="submit" class="btn-primary full-width" style="background: var(--dodger-blue);">VERIFY &
+                    REGISTER</button>
+            </form>
+            <a href="index.html" class="back-link">← Cancel and Exit</a>
+        </div>
+    </div>
+</body>
+
+</html>
+<script src="scripts/app.js"></script>

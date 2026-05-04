@@ -1,0 +1,144 @@
+.hero-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    text-align: center;
+}
+
+.premium-heading {
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    letter-spacing: 0.5rem;
+    color: var(--caribbean-green);
+    margin-bottom: 0.5rem;
+}
+
+.tagline {
+    font-family: var(--font-mono);
+    color: var(--buttercup);
+    margin-bottom: 3rem;
+}
+
+.role-selection {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    width: 100%;
+    max-width: 900px;
+}
+
+.role-card {
+    padding: 3rem 2rem;
+    text-decoration: none;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.role-card h2 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+}
+
+.btn-text {
+    margin-top: 1rem;
+    font-weight: bold;
+    color: var(--caribbean-green);
+}
+
+/* Dashboard Layout */
+.dashboard-body {
+    display: flex;
+    background: #080e1a;
+}
+
+.side-drawer {
+    width: 260px;
+    height: 95vh;
+    margin: 2.5vh 0 2.5vh 20px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-logo {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--caribbean-green);
+    margin-bottom: 3rem;
+}
+
+.nav-links {
+    list-style: none;
+}
+
+.nav-links li {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: 0.3s;
+    color: #888;
+}
+
+.nav-links li.active,
+.nav-links li:hover {
+    background: rgba(0, 212, 170, 0.1);
+    color: var(--caribbean-green);
+}
+
+/* Content Area */
+.dashboard-content {
+    flex: 1;
+    padding: 3rem;
+}
+
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.feed-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.incident-card {
+    padding: 1.5rem;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.status-badge.alert {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--buttercup);
+}
+
+.status-badge.info {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--dodger-blue);
+}
+
+.incident-card h3 {
+    margin: 1rem 0 0.5rem 0;
+    font-family: var(--font-heading);
+}
+
+.incident-card p {
+    font-size: 0.9rem;
+    color: #ccc;
+}
