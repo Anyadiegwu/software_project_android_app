@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { loadUserProfile } from '../src/utils/userStorage';
 
 const SuccessIcon = () => (
   <Svg width="80" height="80" viewBox="0 0 24 24" fill="none">
@@ -20,9 +21,14 @@ const SuccessIcon = () => (
 export default function VerificationSuccessScreen() {
   const router = useRouter();
 
-  const handleContinue = () => {
-    // Navigate to the dashboard/home screen
-    router.replace('/(tabs)/home');
+  const handleContinue = async () => {
+    // Navigate based on user role
+    const profile = await loadUserProfile();
+    if (profile?.role === 'Security Personnel') {
+      router.replace('/dashboard');
+    } else {
+      router.replace('/(tabs)/home');
+    }
   };
 
   return (

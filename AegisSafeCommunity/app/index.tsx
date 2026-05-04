@@ -20,11 +20,15 @@ export default function Index() {
     (async () => {
       try {
         const keepSignedIn = await AsyncStorage.getItem(KEEP_SIGNED_IN_KEY);
-        const session      = await AsyncStorage.getItem(SESSION_KEY);
+        const sessionString = await AsyncStorage.getItem(SESSION_KEY);
 
-        if (keepSignedIn === 'true' && session) {
-          // Valid saved session — go straight to the dashboard
-          router.replace('/(tabs)/home');
+        if (keepSignedIn === 'true' && sessionString) {
+          const session = JSON.parse(sessionString);
+          if (session.role === 'Security Personnel') {
+            router.replace('/dashboard');
+          } else {
+            router.replace('/(tabs)/home');
+          }
         } else {
           setHasSession(false);
         }

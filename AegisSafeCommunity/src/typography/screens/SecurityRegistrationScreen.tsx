@@ -11,9 +11,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../theme/index';
+import { saveUserProfile } from '../../utils/userStorage';
 
-export default function SecurityRegistrationScreen({ navigation }) {
+export default function SecurityRegistrationScreen({ navigation }: { navigation: any }) {
     const [loading, setLoading] = useState(false);
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
@@ -24,7 +26,7 @@ export default function SecurityRegistrationScreen({ navigation }) {
         password: '',
     });
 
-    const handleChange = (field, value) => {
+    const handleChange = (field: string, value: string) => {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
 
@@ -33,15 +35,26 @@ export default function SecurityRegistrationScreen({ navigation }) {
             Alert.alert('Missing Fields', 'Please fill in all required fields.');
             return;
         }
+        if (!agreedToTerms) {
+            Alert.alert('Terms Required', 'Please agree to the Terms of Service to continue.');
+            return;
+        }
 
         setLoading(true);
         // Simulate authentication
-        setTimeout(() => {
+        setTimeout(async () => {
             setLoading(false);
+            
+            await saveUserProfile({
+                displayName: form.firstName + ' ' + form.lastName,
+                email: form.workEmail,
+                role: 'Security Personnel',
+            });
+
             Alert.alert(
                 'Registration Submitted',
                 'Your credentials are being verified with your department. This usually takes 24-48 hours.',
-                [{ text: 'Continue', onPress: () => navigation.navigate('Dashboard') }]
+                [{ text: 'Continue', onPress: () => navigation.navigate('EmailVerification') }]
             );
         }, 1500);
     };
@@ -156,18 +169,24 @@ export default function SecurityRegistrationScreen({ navigation }) {
                     </View>
 
                     {/* Terms */}
-                    <View style={styles.termsContainer}>
-                         <View style={styles.checkbox}></View>
+                    <TouchableOpacity 
+                        style={styles.termsContainer}
+                        onPress={() => setAgreedToTerms((prev) => !prev)}
+                        activeOpacity={0.7}
+                    >
+                         <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
+                             {agreedToTerms && <Text style={styles.checkboxTick}>✓</Text>}
+                         </View>
                          <Text style={styles.termsText}>
                              I agree to Aegis&apos;s Terms of Service and Privacy Policy. I understand my data is protected and never shared with authorities without my consent.
                          </Text>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Submit Button */}
                     <TouchableOpacity
-                        style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
+                        style={[styles.submitBtn, (loading || !agreedToTerms) && styles.submitBtnDisabled]}
                         onPress={handleSubmit}
-                        disabled={loading}
+                        disabled={loading || !agreedToTerms}
                         activeOpacity={0.8}
                     >
                         {loading ? (
@@ -306,11 +325,25 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     checkbox: {
-        width: 15,
-        height: 15,
+        width: 18,
+        height: 18,
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        borderColor: colors.caribbeanGreen,
+        borderRadius: 4,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 1,
+        flexShrink: 0,
+    },
+    checkboxChecked: {
         backgroundColor: colors.caribbeanGreen,
-        borderRadius: 3,
-        marginTop: 2,
+    },
+    checkboxTick: {
+        color: '#0D1117',
+        fontSize: 11,
+        fontWeight: '900',
+        lineHeight: 13,
     },
     termsText: {
         flex: 1,

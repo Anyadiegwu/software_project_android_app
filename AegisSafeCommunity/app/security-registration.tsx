@@ -2,7 +2,7 @@
 // Expo Router screen — renders the SecurityRegistrationScreen component.
 // Route: /security-registration
 
-import SecurityRegistrationScreen from '../src/typography/screens/SecurityRegistrationScreen';
+import SecurityRegistrationScreen from '@/src/typography/screens/SecurityRegistrationScreen';
 import { useRouter } from 'expo-router';
 
 export default function SecurityRegistration() {
@@ -12,6 +12,8 @@ export default function SecurityRegistration() {
     navigate: (name: string) => {
       if (name === 'Home') router.push('/');
       else if (name === 'Dashboard') router.push('/dashboard');
+      else if (name === 'EmailVerification') router.push('/email-verification');
+      else if (name === 'SecurityLogin') router.push('/security-login');
     },
     goBack: () => router.back(),
   };
