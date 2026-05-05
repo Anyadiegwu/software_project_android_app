@@ -51,11 +51,7 @@ export default function SecurityRegistrationScreen({ navigation }: { navigation:
                 role: 'Security Personnel',
             });
 
-            Alert.alert(
-                'Registration Submitted',
-                'Your credentials are being verified with your department. This usually takes 24-48 hours.',
-                [{ text: 'Continue', onPress: () => navigation.navigate('EmailVerification') }]
-            );
+            navigation.navigate('Dashboard');
         }, 1500);
     };
 

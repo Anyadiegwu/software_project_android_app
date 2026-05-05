@@ -58,10 +58,9 @@ export default function WelcomeScreen({ navigation }) {
 
                 {/* Role Cards */}
                 <View style={styles.roleSelection}>
-                    {/* Crime Reporter */}
                     <TouchableOpacity
                         style={[styles.roleCard, styles.crimeCard]}
-                        onPress={() => navigation.navigate('ReporterLogin')}
+                        onPress={() => navigation.navigate('ReporterSignUp')}
                         activeOpacity={0.8}
                     >
                         <View style={styles.iconContainerGreen}>
@@ -78,7 +77,6 @@ export default function WelcomeScreen({ navigation }) {
                         </View>
                     </TouchableOpacity>
 
-                    {/* Security Personnel */}
                     <TouchableOpacity
                         style={[styles.roleCard, styles.securityCard]}
                         onPress={() => navigation.navigate('SecurityRegistration')}

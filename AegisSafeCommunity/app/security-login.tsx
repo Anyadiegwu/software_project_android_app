@@ -1,4 +1,6 @@
 // app/security-login.tsx
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,9 +15,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import Svg, { Path, Rect } from 'react-native-svg';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveUserProfile } from '../src/utils/userStorage';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -82,14 +82,14 @@ export default function SecurityLoginScreen() {
     // Simulate auth — replace with real API call
     setTimeout(async () => {
       setLoading(false);
-      
+
       const derivedName = badge.trim();
       await saveUserProfile({
         displayName: derivedName,
         email: badge.trim(),
         role: 'Security Personnel',
       });
-      
+
       if (trustedDevice) {
         await AsyncStorage.setItem('@aegis_keep_signed_in', 'true');
         await AsyncStorage.setItem('@aegis_session', JSON.stringify({
@@ -102,7 +102,7 @@ export default function SecurityLoginScreen() {
         await AsyncStorage.removeItem('@aegis_session');
       }
 
-      router.push('/email-verification');
+      router.replace('/dashboard');
     }, 1500);
   };
 

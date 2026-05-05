@@ -11,7 +11,28 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { colors } from '../../theme/index';
+
+const LightningIcon = () => (
+  <Svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <Path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke={colors.primaryAccent} strokeWidth="1.5" strokeLinejoin="round" />
+  </Svg>
+);
+
+const ClockIcon = () => (
+  <Svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <Circle cx="12" cy="12" r="10" stroke={colors.primaryAccent} strokeWidth="1.5" />
+    <Path d="M12 6v6l4 2" stroke={colors.primaryAccent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+const CalendarIcon = () => (
+  <Svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <Rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke={colors.primaryAccent} strokeWidth="1.5" />
+    <Path d="M16 2v4M8 2v4M3 10h18" stroke={colors.primaryAccent} strokeWidth="1.5" strokeLinecap="round" />
+  </Svg>
+);
 
 const INCIDENT_TYPES = [
     { id: 'theft', label: 'Theft/Robbery', icon: '🥷' },
@@ -30,6 +51,8 @@ export default function ReportIncidentScreen({ navigation }) {
     // Form State
     const [incidentType, setIncidentType] = useState('');
     const [urgency, setUrgency] = useState('Medium');
+    const [incidentTime, setIncidentTime] = useState('');
+    const [customDateTime, setCustomDateTime] = useState('');
     const [description, setDescription] = useState('');
     const [suspects, setSuspects] = useState('');
     const [weapons, setWeapons] = useState('');
@@ -37,15 +60,15 @@ export default function ReportIncidentScreen({ navigation }) {
     const [isAnonymous, setIsAnonymous] = useState(false);
 
     const handleNext = () => {
-        if (step < 4) {
+        if (step < 5) {
             setStep(step + 1);
-        } else if (step === 4) {
+        } else if (step === 5) {
             submitReport();
         }
     };
 
     const handleBack = () => {
-        if (step > 1 && step < 5) {
+        if (step > 1 && step < 6) {
             setStep(step - 1);
         } else {
             navigation.goBack();
@@ -53,14 +76,14 @@ export default function ReportIncidentScreen({ navigation }) {
     };
 
     const submitReport = () => {
-        // Show success screen (Step 5)
-        setStep(5);
+        // Show success screen (Step 6)
+        setStep(6);
     };
 
     const renderProgressBar = () => {
         return (
             <View style={styles.progressContainer}>
-                {[1, 2, 3, 4].map((s) => (
+                {[1, 2, 3, 4, 5].map((s) => (
                     <View 
                         key={s} 
                         style={[
@@ -111,8 +134,8 @@ export default function ReportIncidentScreen({ navigation }) {
 
     const renderStep2 = () => (
         <View style={styles.stepContainer}>
-            <Text style={styles.sectionTitle}>Incident Details</Text>
-            <Text style={styles.helperText}>Provide as much detail as possible to help responders.</Text>
+            <Text style={styles.sectionTitle}>Describe the incident</Text>
+            <Text style={styles.helperText}>Include as much detail as you're comfortable sharing.</Text>
             
             <TextInput
                 style={[styles.input, styles.textArea]}
@@ -126,7 +149,7 @@ export default function ReportIncidentScreen({ navigation }) {
             />
             <Text style={styles.charCount}>{description.length}/500</Text>
 
-            <Text style={styles.inputLabel}>Suspect Information (Optional)</Text>
+            <Text style={styles.inputLabel}>NUMBER OF SUSPECTS (APPROX.)</Text>
             <TextInput
                 style={styles.input}
                 placeholder="e.g. Height, clothing, distinguishing features"
@@ -135,7 +158,7 @@ export default function ReportIncidentScreen({ navigation }) {
                 onChangeText={setSuspects}
             />
 
-            <Text style={styles.inputLabel}>Weapons Involved (Optional)</Text>
+            <Text style={styles.inputLabel}>WEAPONS SEEN</Text>
             <TextInput
                 style={styles.input}
                 placeholder="e.g. Knife, firearm"
@@ -144,7 +167,7 @@ export default function ReportIncidentScreen({ navigation }) {
                 onChangeText={setWeapons}
             />
 
-            <Text style={styles.inputLabel}>Vehicle Details (Optional)</Text>
+            <Text style={styles.inputLabel}>SUSPECT VEHICLE</Text>
             <TextInput
                 style={styles.input}
                 placeholder="e.g. Make, model, color, plate number"
@@ -156,6 +179,55 @@ export default function ReportIncidentScreen({ navigation }) {
     );
 
     const renderStep3 = () => (
+        <View style={styles.stepContainer}>
+            <Text style={styles.sectionTitle}>When did it happen?</Text>
+            <Text style={styles.helperText}>Select the approximate time of the incident.</Text>
+
+            <View style={{ gap: 12 }}>
+                <TouchableOpacity
+                    style={[styles.timeCard, incidentTime === 'just_now' ? styles.timeCardActive : null]}
+                    onPress={() => setIncidentTime('just_now')}
+                    activeOpacity={0.8}
+                >
+                    <LightningIcon />
+                    <Text style={[styles.timeLabel, incidentTime === 'just_now' ? styles.timeLabelActive : null]}>JUST NOW</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.timeCard, incidentTime === 'past_hour' ? styles.timeCardActive : null]}
+                    onPress={() => setIncidentTime('past_hour')}
+                    activeOpacity={0.8}
+                >
+                    <ClockIcon />
+                    <Text style={[styles.timeLabel, incidentTime === 'past_hour' ? styles.timeLabelActive : null]}>PAST HOUR</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.timeCard, incidentTime === 'custom' ? styles.timeCardActive : null]}
+                    onPress={() => setIncidentTime('custom')}
+                    activeOpacity={0.8}
+                >
+                    <CalendarIcon />
+                    <Text style={[styles.timeLabel, incidentTime === 'custom' ? styles.timeLabelActive : null]}>CUSTOM DATE/TIME</Text>
+                </TouchableOpacity>
+            </View>
+
+            {incidentTime === 'custom' && (
+                <View style={{ marginTop: 16 }}>
+                    <Text style={styles.inputLabel}>ENTER DATE AND TIME <Text style={{ color: colors.dangerRed }}>*</Text></Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="e.g. October 12, 10:30 PM"
+                        placeholderTextColor={colors.palesky}
+                        value={customDateTime}
+                        onChangeText={setCustomDateTime}
+                    />
+                </View>
+            )}
+        </View>
+    );
+
+    const renderStep4 = () => (
         <View style={styles.stepContainer}>
             <Text style={styles.sectionTitle}>Location & Evidence</Text>
             
@@ -193,7 +265,7 @@ export default function ReportIncidentScreen({ navigation }) {
         </View>
     );
 
-    const renderStep4 = () => (
+    const renderStep5 = () => (
         <View style={styles.stepContainer}>
             <Text style={styles.sectionTitle}>Review & Submit</Text>
             
@@ -233,7 +305,7 @@ export default function ReportIncidentScreen({ navigation }) {
         </View>
     );
 
-    const renderStep5 = () => (
+    const renderStep6 = () => (
         <View style={styles.successContainer}>
             <View style={styles.successCircle}>
                 <Text style={styles.successCheck}>✓</Text>
@@ -254,43 +326,44 @@ export default function ReportIncidentScreen({ navigation }) {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            {step < 5 ? (
+            {step < 6 ? (
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
                         <Text style={styles.backIcon}>←</Text>
                     </TouchableOpacity>
                     <View style={styles.headerCenter}>
                         <Text style={styles.headerTitle}>NEW REPORT</Text>
-                        <Text style={styles.stepText}>STEP {step}/4</Text>
+                        <Text style={styles.stepText}>STEP {step}/5</Text>
                     </View>
                     <View style={{ width: 30 }} />
                 </View>
             ) : null}
 
-            {step < 5 ? renderProgressBar() : null}
+            {step < 6 ? renderProgressBar() : null}
 
             <KeyboardAvoidingView 
                 style={{ flex: 1 }} 
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
-                <ScrollView contentContainerStyle={step === 5 ? styles.scrollContentSuccess : styles.scrollContent} showsVerticalScrollIndicator={false}>
+                <ScrollView contentContainerStyle={step === 6 ? styles.scrollContentSuccess : styles.scrollContent} showsVerticalScrollIndicator={false}>
                     {step === 1 ? renderStep1() : null}
                     {step === 2 ? renderStep2() : null}
                     {step === 3 ? renderStep3() : null}
                     {step === 4 ? renderStep4() : null}
                     {step === 5 ? renderStep5() : null}
+                    {step === 6 ? renderStep6() : null}
                 </ScrollView>
 
-                {step < 5 ? (
+                {step < 6 ? (
                     <View style={styles.bottomBar}>
                         <TouchableOpacity 
-                            style={[styles.primaryBtn, step === 4 ? styles.submitBtn : null]} 
+                            style={[styles.primaryBtn, step === 5 ? styles.submitBtn : null]} 
                             onPress={handleNext}
                             activeOpacity={0.8}
                             disabled={step === 1 && !incidentType}
                         >
-                            <Text style={[styles.primaryBtnText, step === 4 ? styles.submitBtnText : null]}>
-                                {step < 4 ? 'CONTINUE' : 'SUBMIT REPORT SECURELY'}
+                            <Text style={[styles.primaryBtnText, step === 5 ? styles.submitBtnText : null]}>
+                                {step < 5 ? 'CONTINUE' : 'SUBMIT REPORT SECURELY'}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -426,6 +499,18 @@ const styles = StyleSheet.create({
     },
     textArea: { height: 120 },
     charCount: { color: colors.palesky, fontSize: 10, textAlign: 'right', marginTop: 4 },
+
+    timeCard: {
+        flexDirection: 'row', alignItems: 'center', gap: 16,
+        backgroundColor: colors.bigStone, borderRadius: 12, padding: 18,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)',
+    },
+    timeCardActive: {
+        borderColor: colors.primaryAccent,
+        backgroundColor: 'rgba(0, 208, 156, 0.1)',
+    },
+    timeLabel: { fontSize: 13, fontWeight: '700', color: colors.palesky, letterSpacing: 1 },
+    timeLabelActive: { color: colors.primaryAccent },
 
     // Step 3: Location & Upload
     locationBox: {

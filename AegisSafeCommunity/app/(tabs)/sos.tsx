@@ -14,6 +14,7 @@ import {
 import * as Location from 'expo-location';
 import Svg, { Path } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 // ─── Amber Checkmark Icon ────────────────────────────────────────────────────────
 function CheckIcon() {
@@ -98,6 +99,8 @@ function StatusRow({ icon, label, value }: { icon: string; label: string; value:
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function SosTab() {
+  const router = useRouter();
+
   // Location state
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'shared' | 'error'>('idle');
@@ -207,12 +210,10 @@ export default function SosTab() {
 
   const handleCancelSos = useCallback(() => {
     if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
-    cancelTimerRef.current = setTimeout(() => {
-      setSosActive(false);
-    }, 3000);
-    // Immediately hide the active UI
+    // Immediately hide the active UI and return home
     setSosActive(false);
-  }, []);
+    router.replace('/(tabs)/home');
+  }, [router]);
 
   useEffect(() => {
     return () => {
@@ -348,7 +349,11 @@ export default function SosTab() {
             </TouchableOpacity>
 
             {/* Cancel */}
-            <TouchableOpacity style={styles.cancelIdleBtn} activeOpacity={0.8}>
+            <TouchableOpacity 
+              style={styles.cancelIdleBtn} 
+              activeOpacity={0.8}
+              onPress={() => router.replace('/(tabs)/home')}
+            >
               <Text style={styles.cancelIdleBtnText}>CANCEL</Text>
             </TouchableOpacity>
           </View>

@@ -118,7 +118,7 @@ export default function MainHomeScreen({ navigation, userName = 'Community Membe
                     {[
                         { title: 'Track Report', icon: <TrackReportIcon />, route: 'Reports' },
                         { title: 'Safety Map', icon: <SafetyMapIcon />, route: 'Map' },
-                        { title: 'Community', icon: <CommunityIcon />, route: 'Profile' },
+                        { title: 'Community', icon: <CommunityIcon />, route: 'CommunityWatch' },
                         { title: 'Emergency', icon: <EmergencyIcon />, route: 'Sos' },
                     ].map((action, i) => (
                         <TouchableOpacity key={i} style={styles.actionCard} activeOpacity={0.8} onPress={() => navigation.navigate(action.route)}>
