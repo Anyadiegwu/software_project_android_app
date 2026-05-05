@@ -10,7 +10,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { colors } from '../../theme/index';
 
@@ -46,7 +47,9 @@ const INCIDENT_TYPES = [
 ];
 
 export default function ReportIncidentScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     const [step, setStep] = useState(1);
+
     
     // Form State
     const [incidentType, setIncidentType] = useState('');
@@ -355,7 +358,8 @@ export default function ReportIncidentScreen({ navigation }) {
                 </ScrollView>
 
                 {step < 6 ? (
-                    <View style={styles.bottomBar}>
+                    <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+
                         <TouchableOpacity 
                             style={[styles.primaryBtn, step === 5 ? styles.submitBtn : null]} 
                             onPress={handleNext}
@@ -624,7 +628,7 @@ const styles = StyleSheet.create({
     // Bottom Bar
     bottomBar: {
         padding: 20,
-        paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+        paddingBottom: 20,
         borderTopWidth: 1,
         borderTopColor: 'rgba(255,255,255,0.05)',
         backgroundColor: colors.ebonyDark,

@@ -16,6 +16,8 @@ import {
     Alert,
     Animated
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import * as Location from 'expo-location';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -281,7 +283,9 @@ const MOCK_UNITS = [
 ];
 
 export default function DashboardScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     const [userName, setUserName] = useState('Officer');
+
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('dashboard');
     const [liveCounter, setLiveCounter] = useState(0);
@@ -1505,7 +1509,8 @@ export default function DashboardScreen({ navigation }) {
                 ) : null}
 
                 {/* Bottom Navigation */}
-                <View style={styles.bottomNav}>
+                <View style={[styles.bottomNav, { paddingBottom: Math.max(insets.bottom, 12), height: 64 + Math.max(insets.bottom, 12) }]}>
+
                     <TouchableOpacity style={styles.navItem} onPress={() => setActiveTab('dashboard')}>
                         <View style={styles.navIconContainer}>
                             <HomeIcon color={activeTab === 'dashboard' ? "#F59E0B" : "#6B7280"} />
