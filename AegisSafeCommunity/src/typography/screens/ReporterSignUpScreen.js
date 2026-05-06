@@ -127,7 +127,7 @@ export default function ReporterSignUpScreen({ navigation }) {
                             {agreedToTerms && <Text style={styles.checkboxTick}>✓</Text>}
                         </View>
                         <Text style={styles.termsText}>
-                            I agree to Aegis's Terms of Service and Privacy Policy. I understand my data is protected and never shared with authorities without my consent.
+                            {"I agree to Aegis's Terms of Service and Privacy Policy. I understand my data is protected and never shared with authorities without my consent."}
                         </Text>
                     </TouchableOpacity>
 

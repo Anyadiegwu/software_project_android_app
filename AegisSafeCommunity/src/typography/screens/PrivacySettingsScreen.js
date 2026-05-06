@@ -121,7 +121,7 @@ export default function PrivacySettingsScreen({ navigation }) {
                             </View>
                             <View style={styles.privacySettingTextContainer}>
                                 <Text style={styles.privacySettingTitle}>Community Map Presence</Text>
-                                <Text style={styles.privacySettingSubtitle}>Show you're active in your area</Text>
+                                <Text style={styles.privacySettingSubtitle}>{"Show you're active in your area"}</Text>
                             </View>
                             <TouchableOpacity 
                                 style={[styles.toggleTrack, privacySettings.communityMapPresence ? styles.toggleTrackActive : styles.toggleTrackInactive]}

@@ -36,5 +36,5 @@ export default function HomeTab() {
     goBack: () => router.back(),
   };
 
-  return <MainHomeScreen navigation={navigation} userName={userName} />;
+  return <MainHomeScreen navigation={navigation} />;
 }

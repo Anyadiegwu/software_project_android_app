@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform  } from 'react-native';
 import { useRouter } from 'expo-router';
 import Svg, { Path, Circle } from 'react-native-svg';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
+             
 const CheckIcon = () => (
   <Svg width="48" height="48" viewBox="0 0 24 24" fill="none">
     <Circle cx="12" cy="12" r="10" fill="#22C55E" />
@@ -24,6 +25,7 @@ export default function ReportSuccessScreen() {
 
   return (
     <SafeAreaView style={styles.root}>
+      
       <View style={styles.content}>
         
         <View style={styles.iconContainer}>

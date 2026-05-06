@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../theme/index';
+import { API } from '../../config/api';
+import { AuthStorage } from '../../utils/authStorage';
 
 const KEEP_SIGNED_IN_KEY = '@aegis_keep_signed_in';
 const SESSION_KEY        = '@aegis_session';
@@ -34,17 +36,45 @@ export default function ReporterLoginScreen({ navigation }) {
 
         setLoading(true);
 
-        // Simulate authentication (replace with real API call)
-        setTimeout(async () => {
-            setLoading(false);
+        try {
+            const response = await fetch(API.REPORTER_LOGIN, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: form.email.trim().toLowerCase(),
+                    password: form.password,
+                }),
+            });
 
-            // Derive a display name from the email (e.g. "amaka@..." → "amaka")
-            const derivedName = form.email.split('@')[0];
+            const data = await response.json();
 
-            // Save user profile so name flows through Home, Profile, SideDrawer
+            if (!response.ok) {
+                if (response.status === 403) {
+                    Alert.alert(
+                        'Email Not Verified',
+                        'Please verify your email before logging in.',
+                        [
+                            {
+                                text: 'Verify Now',
+                                onPress: () => navigation.navigate('EmailVerification', {
+                                    email: form.email.trim().toLowerCase(),
+                                }),
+                            },
+                            { text: 'Cancel', style: 'cancel' },
+                        ]
+                    );
+                    return;
+                }
+                Alert.alert('Login Failed', data.message || 'Something went wrong.');
+                return;
+            }
+
+            // Save real token + user from API
+            await AuthStorage.saveSession(data.token, data.user);
+
             await saveUserProfile({
-                displayName: derivedName,
-                email: form.email,
+                displayName: data.user.name || form.email.split('@')[0],
+                email: data.user.email,
                 role: 'Crime Reporter',
             });
 
@@ -60,7 +90,13 @@ export default function ReporterLoginScreen({ navigation }) {
             }
 
             navigation.navigate('Dashboard');
-        }, 1500);
+
+        } catch (err) {
+            Alert.alert('Network Error', 'Could not reach the server. Check your connection.');
+            Alert.alert(err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -77,12 +113,10 @@ export default function ReporterLoginScreen({ navigation }) {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.formContainer}>
-                    {/* Header */}
                     <Text style={styles.topLabel}>Sign In</Text>
                     <Text style={styles.heading}>Welcome back</Text>
                     <Text style={styles.subheading}>Sign in to view your reports and submit new ones.</Text>
 
-                    {/* Anonymous Banner */}
                     <View style={styles.anonymousBanner}>
                         <Text style={styles.bannerIcon}>🔒</Text>
                         <View style={styles.bannerTextContainer}>
@@ -93,7 +127,6 @@ export default function ReporterLoginScreen({ navigation }) {
                         </View>
                     </View>
 
-                    {/* Email */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Email address <Text style={styles.asterisk}>*</Text></Text>
                         <TextInput
@@ -107,7 +140,6 @@ export default function ReporterLoginScreen({ navigation }) {
                         />
                     </View>
 
-                    {/* Password */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Password <Text style={styles.asterisk}>*</Text></Text>
                         <TextInput
@@ -120,9 +152,7 @@ export default function ReporterLoginScreen({ navigation }) {
                         />
                     </View>
 
-                    {/* Keep me signed in + Forgot password */}
                     <View style={styles.extrasRow}>
-                        {/* ── Interactive checkbox ─────────────────────── */}
                         <TouchableOpacity
                             style={styles.checkboxContainer}
                             onPress={() => setKeepSignedIn((prev) => !prev)}
@@ -139,7 +169,6 @@ export default function ReporterLoginScreen({ navigation }) {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Buttons */}
                     <View style={styles.buttonGroup}>
                         <TouchableOpacity
                             style={[styles.primaryBtn, loading && styles.btnDisabled]}
@@ -163,9 +192,8 @@ export default function ReporterLoginScreen({ navigation }) {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Footer */}
                     <View style={styles.footer}>
-                        <Text style={styles.footerText}>Don't have an account? </Text>
+                        <Text style={styles.footerText}>{"Don't have an account? "}</Text>
                         <TouchableOpacity onPress={() => navigation.navigate('ReporterSignUp')}>
                             <Text style={styles.footerLink}>Create one free</Text>
                         </TouchableOpacity>
@@ -227,8 +255,6 @@ const styles = StyleSheet.create({
         color: colors.palesky,
         marginBottom: 32,
     },
-
-    // Anonymous Banner
     anonymousBanner: {
         flexDirection: 'row',
         backgroundColor: 'rgba(0, 212, 170, 0.08)',
@@ -251,8 +277,6 @@ const styles = StyleSheet.create({
         color: colors.athensGray,
         lineHeight: 18,
     },
-
-    // Form
     inputGroup: { marginBottom: 20 },
     label: {
         fontSize: 11.8,
@@ -271,8 +295,6 @@ const styles = StyleSheet.create({
         color: colors.white,
         fontSize: 13.4,
     },
-
-    // Keep me signed in
     extrasRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -312,8 +334,6 @@ const styles = StyleSheet.create({
         fontSize: 11.7,
         color: colors.caribbeanGreen,
     },
-
-    // Buttons
     buttonGroup: { gap: 8, marginBottom: 20 },
     primaryBtn: {
         backgroundColor: colors.caribbeanGreen,
@@ -340,8 +360,6 @@ const styles = StyleSheet.create({
         color: colors.grayCharcoal,
         fontSize: 13.1,
     },
-
-    // Footer
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
