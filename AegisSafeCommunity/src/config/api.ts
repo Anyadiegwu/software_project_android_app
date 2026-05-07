@@ -62,65 +62,7 @@
 
 // // ─── Base URL ─────────────────────────────────────────────────────────────────
 // // Change this to your deployed URL when you go to production.
-const BASE_URL = 'http://10.170.172.21:5000';   // Android emulator → localhost
-// // const BASE_URL = 'http://localhost:5000'; // iOS simulator
-// // const BASE_URL = 'https://your-production-url.com'; // Production
-
-// // ─── API Endpoints ────────────────────────────────────────────────────────────
-// export const API = {
-//   // ── Auth ────────────────────────────────────────────────────────────────────
-//   REPORTER_REGISTER:        `${BASE_URL}/api/auth/reporter/register`,
-//   REPORTER_LOGIN:           `${BASE_URL}/api/auth/reporter/login`,
-//   SECURITY_REGISTER:        `${BASE_URL}/api/auth/security/register`,
-//   SECURITY_LOGIN:           `${BASE_URL}/api/auth/security/login`,
-//   ADMIN_REGISTER:           `${BASE_URL}/api/auth/admin/register`,
-//   ADMIN_LOGIN:              `${BASE_URL}/api/auth/admin/login`,
-//   VERIFY_OTP:               `${BASE_URL}/api/auth/verify-otp`,
-//   RESEND_OTP:               `${BASE_URL}/api/auth/resend-otp`,
-//   REQUEST_PASSWORD_RESET:   `${BASE_URL}/api/auth/request-password-reset`,
-//   RESET_PASSWORD:           `${BASE_URL}/api/auth/reset-password`,
-//   LOGOUT:                   `${BASE_URL}/api/auth/logout`,
-
-//   // ── Reporter ─────────────────────────────────────────────────────────────────
-//   // POST   /api/reporter/report          → create a new report
-//   CREATE_REPORT:            `${BASE_URL}/api/reporter/report`,
-
-//   // GET    /api/reporter/my-reports      → fetch the logged-in reporter's reports
-//   MY_REPORTS:               `${BASE_URL}/api/reporter/my-reports`,
-
-//   // POST   /api/reporter/distress        → trigger distress signal
-//   DISTRESS:                 `${BASE_URL}/api/reporter/distress`,
-
-//   // GET    /api/reporter/alerts          → fetch active alerts
-//   ALERTS:                   `${BASE_URL}/api/reporter/alerts`,
-
-//   // GET    /api/reporter/community-watch → fetch community reports
-//   COMMUNITY_WATCH:          `${BASE_URL}/api/reporter/community-watch`,
-
-//   // GET    /api/reporter/analytics       → fetch reporter analytics
-//   ANALYTICS:                `${BASE_URL}/api/reporter/analytics`,
-//   // In the Reporter section, add:
-//   SAFETY_MAP: `${BASE_URL}/api/reporter/safety-map`,
-
-//   // GET    /api/reporter/report/:id/timeline → fetch report timeline
-//   REPORT_TIMELINE: (id: string) => `${BASE_URL}/api/reporter/report/${id}/timeline`,
-
-//   // POST   /api/reporter/report/:id/evidence → upload evidence files
-//   // NOTE: This is called dynamically in ReportIncidentScreen as:
-//   //   `${API.CREATE_REPORT}/${reportId}/evidence`
-//   // Which resolves to: /api/reporter/report/:id/evidence  ✓
-
-//   // ── User ─────────────────────────────────────────────────────────────────────
-//   MY_PROFILE:               `${BASE_URL}/api/user/me`,
-//   UPDATE_PROFILE:           `${BASE_URL}/api/user/me`,
-
-//   // ── Notifications ─────────────────────────────────────────────────────────────
-//   NOTIFICATIONS:            `${BASE_URL}/api/notifications`,
-//   UNREAD_COUNT:             `${BASE_URL}/api/notifications/unread-count`,
-//   MARK_ALL_READ:            `${BASE_URL}/api/notifications/read-all`,
-//   MARK_READ: (id: string) => `${BASE_URL}/api/notifications/${id}/read`,
-// };
-
+const BASE_URL = 'http://10.170.172.2:5000';
 export const API = {
   // ── Auth ────────────────────────────────────────────────────────────────────
   REPORTER_REGISTER:        `${BASE_URL}/api/auth/reporter/register`,

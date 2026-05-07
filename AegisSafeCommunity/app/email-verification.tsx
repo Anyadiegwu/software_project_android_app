@@ -653,13 +653,13 @@ export default function EmailVerificationScreen() {
         Alert.alert(
           'Almost there!',
           'Your email is verified. Please log in to continue.',
-          [{ text: 'OK', onPress: () => router.replace('/reporter-login') }]
+          [{ text: 'OK', onPress: () => router.replace(role === 'security' ? '/security-login' : '/reporter-login') }]
         );
         return;
       }
 
       // ── Step 3: Persist the token and user, then continue ───────────────
-      await AuthStorage.saveSession(loginData.token, loginData.user);
+      await AuthStorage.saveSession(loginData.token, loginData.user, true); // default to keeping signed in
       
       router.replace('/verification-success');
 

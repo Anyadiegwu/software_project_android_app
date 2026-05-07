@@ -10,19 +10,36 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 import { colors } from '../../theme/index';
 import { API } from '../../config/api';
 import { AuthStorage } from '../../utils/authStorage';
 
-const KEEP_SIGNED_IN_KEY = '@aegis_keep_signed_in';
-const SESSION_KEY        = '@aegis_session';
+const EyeIcon = ({ visible }) => (
+    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        {visible ? (
+            <>
+                <Path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#6B7280" strokeWidth="1.6" />
+                <Path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" stroke="#6B7280" strokeWidth="1.6" />
+            </>
+        ) : (
+            <>
+                <Path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" stroke="#6B7280" strokeWidth="1.6" strokeLinecap="round" />
+                <Path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" stroke="#6B7280" strokeWidth="1.6" strokeLinecap="round" />
+                <Path d="M1 1l22 22" stroke="#6B7280" strokeWidth="1.6" strokeLinecap="round" />
+            </>
+        )}
+    </Svg>
+);
 
 export default function ReporterLoginScreen({ navigation }) {
     const [loading,      setLoading]      = useState(false);
     const [keepSignedIn, setKeepSignedIn] = useState(false);
     const [form, setForm] = useState({ email: '', password: '' });
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (field, value) => {
         setForm((prev) => ({ ...prev, [field]: value }));
@@ -58,6 +75,8 @@ export default function ReporterLoginScreen({ navigation }) {
                                 text: 'Verify Now',
                                 onPress: () => navigation.navigate('EmailVerification', {
                                     email: form.email.trim().toLowerCase(),
+                                    password: form.password,
+                                    role: 'reporter',
                                 }),
                             },
                             { text: 'Cancel', style: 'cancel' },
@@ -69,8 +88,7 @@ export default function ReporterLoginScreen({ navigation }) {
                 return;
             }
 
-            // Save real token + user from API
-            await AuthStorage.saveSession(data.token, data.user);
+            await AuthStorage.saveSession(data.token, data.user, keepSignedIn);
 
             await saveUserProfile({
                 displayName: data.user.name || form.email.split('@')[0],
@@ -78,22 +96,10 @@ export default function ReporterLoginScreen({ navigation }) {
                 role: 'Crime Reporter',
             });
 
-            if (keepSignedIn) {
-                await AsyncStorage.setItem(KEEP_SIGNED_IN_KEY, 'true');
-                await AsyncStorage.setItem(SESSION_KEY, JSON.stringify({
-                    email: form.email,
-                    loggedInAt: new Date().toISOString(),
-                }));
-            } else {
-                await AsyncStorage.removeItem(KEEP_SIGNED_IN_KEY);
-                await AsyncStorage.removeItem(SESSION_KEY);
-            }
-
             navigation.navigate('Dashboard');
 
         } catch (err) {
             Alert.alert('Network Error', 'Could not reach the server. Check your connection.');
-            Alert.alert(err);
         } finally {
             setLoading(false);
         }
@@ -129,27 +135,40 @@ export default function ReporterLoginScreen({ navigation }) {
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Email address <Text style={styles.asterisk}>*</Text></Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="amaka@example.com"
-                            placeholderTextColor="#6B7280"
-                            value={form.email}
-                            onChangeText={(v) => handleChange('email', v)}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                        />
+                        <View style={styles.inputWrapper}>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="amaka@example.com"
+                                placeholderTextColor="#6B7280"
+                                value={form.email}
+                                onChangeText={(v) => handleChange('email', v)}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                            />
+                        </View>
                     </View>
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Password <Text style={styles.asterisk}>*</Text></Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="••••••••••"
-                            placeholderTextColor="#6B7280"
-                            value={form.password}
-                            onChangeText={(v) => handleChange('password', v)}
-                            secureTextEntry
-                        />
+                        <View style={styles.inputWrapper}>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="••••••••••"
+                                placeholderTextColor="#6B7280"
+                                value={form.password}
+                                onChangeText={(v) => handleChange('password', v)}
+                                secureTextEntry={!showPassword}
+                                autoCorrect={false}
+                            />
+                            <TouchableOpacity 
+                                style={styles.eyeBtn} 
+                                onPress={() => setShowPassword(!showPassword)}
+                                activeOpacity={0.7}
+                            >
+                                <EyeIcon visible={showPassword} />
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     <View style={styles.extrasRow}>
@@ -281,19 +300,31 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 11.8,
         color: colors.athensGray,
-        marginBottom: 6,
+        marginBottom: 8,
         fontWeight: '500',
     },
     asterisk: { color: colors.caribbeanGreen },
-    input: {
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: colors.bigStone,
         borderWidth: 1,
-        borderColor: colors.caribbeanGreen,
-        borderRadius: 6,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 8,
+        paddingHorizontal: 14,
+        height: 50,
+    },
+    input: {
+        flex: 1,
         color: colors.white,
-        fontSize: 13.4,
+        fontSize: 14,
+        paddingVertical: Platform.OS === 'ios' ? 0 : 8,
+    },
+    eyeBtn: {
+        paddingLeft: 10,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     extrasRow: {
         flexDirection: 'row',

@@ -4577,6 +4577,18 @@ function statusLabel(status) {
     return map[status] || status.toUpperCase();
 }
 
+function statusColor(status) {
+    if (status === 'in_progress') return '#3B82F6';
+    if (status === 'resolved') return '#10B981';
+    return '#F59E0B';
+}
+
+function statusBgColor(status) {
+    if (status === 'in_progress') return 'rgba(59, 130, 246, 0.1)';
+    if (status === 'resolved') return 'rgba(16, 185, 129, 0.1)';
+    return 'rgba(245, 158, 11, 0.1)';
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function DashboardScreen({ navigation }) {
     const insets = useSafeAreaInsets();
@@ -4588,6 +4600,8 @@ export default function DashboardScreen({ navigation }) {
     const [caseFilter, setCaseFilter] = useState('ALL');
     const [wbFilter, setWbFilter] = useState('RECENT');
     const [token, setToken] = useState(null);
+    const [activeCase, setActiveCase] = useState(null);
+    const [startTime, setStartTime] = useState(null);
 
     // ── API Data State ───────────────────────────────────────────────────────
     const [dashboardStats, setDashboardStats] = useState({ active: 0, resolved: 0, pending: 0 });
@@ -4617,6 +4631,16 @@ export default function DashboardScreen({ navigation }) {
 
     const togglePrivacySetting = (key) => {
         setPrivacySettings(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const handleViewCase = (report) => {
+        setActiveCase(report);
+        if (report.status === 'in_progress' && !startTime) {
+            setStartTime(new Date(report.updatedAt || report.createdAt).getTime());
+        } else if (!startTime) {
+            setStartTime(Date.now());
+        }
+        setActiveTab('case_in_progress');
     };
 
     // ── Drawer Animations ────────────────────────────────────────────────────
@@ -4774,26 +4798,36 @@ export default function DashboardScreen({ navigation }) {
     };
 
     // ── API: Start Report ─────────────────────────────────────────────────────
-    const handleStartReport = async (reportId) => {
-        if (!token) return;
+    const handleStartReport = async (report) => {
+        // Instant UI Transition (Optimistic UI)
+        setActiveCase(report);
+        setStartTime(Date.now());
+        setActiveTab('case_in_progress');
+
+        if (!token) {
+            console.warn('No auth token found, UI transitioned but API call skipped.');
+            return;
+        }
+
         try {
-            const res = await fetch(`${API_BASE}/api/security/report/${reportId}/start`, {
+            const res = await fetch(`${API_BASE}/api/security/report/${report._id}/start`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
             });
+            
             if (res.ok) {
-                Alert.alert('Started', 'Report is now in progress.');
                 fetchReports();
                 fetchStats();
             } else {
                 const data = await res.json();
-                Alert.alert('Error', data.message || 'Failed to start report.');
+                console.error('Failed to sync start status with server:', data.message);
+                // We stay on the screen anyway for the demo/UX, but log the error
             }
-        } catch (_) {
-            Alert.alert('Network Error', 'Could not reach the server.');
+        } catch (err) {
+            console.error('Network error syncing case start:', err);
         }
     };
 
@@ -4818,6 +4852,10 @@ export default function DashboardScreen({ navigation }) {
                             });
                             if (res.ok) {
                                 Alert.alert('Resolved', 'Report has been resolved.');
+                                if (activeTab === 'case_in_progress') {
+                                    setActiveTab('dashboard');
+                                    setActiveCase(null);
+                                }
                                 fetchReports();
                                 fetchStats();
                             } else {
@@ -4913,7 +4951,7 @@ export default function DashboardScreen({ navigation }) {
     // RENDER
     // ─────────────────────────────────────────────────────────────────────────
     return (
-        <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+        <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
 
                 {/* ── Side Drawer ─────────────────────────────────────────── */}
@@ -5248,39 +5286,41 @@ export default function DashboardScreen({ navigation }) {
                                     .map((report) => (
                                         <View key={report._id} style={styles.caseCard}>
                                             <View style={styles.caseHeader}>
-                                                <View style={[styles.priorityBadge, { backgroundColor: priorityBgColor(report.urgency) }]}>
-                                                    <Text style={[styles.priorityBadgeText, { color: priorityColor(report.urgency) }]}>
+                                                <View style={styles.priorityBadge}>
+                                                    <Text style={styles.priorityBadgeText}>
                                                         {priorityFromUrgency(report.urgency)}
                                                     </Text>
                                                 </View>
-                                                <Text style={styles.caseTitle} numberOfLines={2}>
-                                                    {report.description || report.category || 'Incident Report'}
+                                                <Text style={styles.caseTitle} numberOfLines={1}>
+                                                    {report.category || 'Incident'}
                                                 </Text>
                                             </View>
                                             <Text style={styles.caseMeta}>
-                                                Case #{report._id.slice(-6).toUpperCase()}  ·  {timeAgo(report.createdAt)}
+                                                Case #{report._id.slice(-6).toUpperCase()}  ·  Submitted {new Date(report.createdAt).getHours()}:{new Date(report.createdAt).getMinutes().toString().padStart(2, '0')}  ·  {report.isAnonymous ? 'Anonymous reporter' : 'Verified reporter'}
                                             </Text>
-                                            {report.location?.address ? (
-                                                <Text style={styles.caseMeta}>📍 {report.location.address}</Text>
-                                            ) : null}
-                                            <View style={styles.caseFooter}>
-                                                <Text style={styles.unassignedText}>{statusLabel(report.status)}</Text>
-                                                {report.status === 'assigned' && (
-                                                    <TouchableOpacity
-                                                        style={styles.actionButton}
-                                                        onPress={() => handleStartReport(report._id)}
-                                                    >
-                                                        <Text style={styles.actionButtonText}>START</Text>
-                                                    </TouchableOpacity>
-                                                )}
-                                                {report.status === 'in_progress' && (
-                                                    <TouchableOpacity
-                                                        style={styles.outlineButton}
-                                                        onPress={() => handleResolveReport(report._id)}
-                                                    >
-                                                        <Text style={styles.outlineButtonText}>RESOLVE</Text>
-                                                    </TouchableOpacity>
-                                                )}
+                                            <View style={[styles.statusBadge, { backgroundColor: statusBgColor(report.status) }]}>
+                                                <Text style={[styles.statusBadgeText, { color: statusColor(report.status) }]}>{statusLabel(report.status)}</Text>
+                                            </View>
+
+                                            <View style={styles.caseDivider} />
+
+                                            <View style={styles.caseActionRow}>
+                                                <TouchableOpacity style={styles.vCircle} onPress={() => handleViewCase(report)}>
+                                                    <Text style={styles.vText}>V</Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={[styles.startCaseBtn, report.status === 'in_progress' && { backgroundColor: '#10B981' }]}
+                                                    onPress={() => {
+                                                        if (report.status === 'assigned' || report.status === 'pending') handleStartReport(report);
+                                                        else if (report.status === 'in_progress') handleResolveReport(report._id);
+                                                        else Alert.alert('Case Info', `This case is currently ${statusLabel(report.status)}`);
+                                                    }}
+                                                >
+                                                    <Text style={styles.startCaseBtnText}>
+                                                        {report.status === 'in_progress' ? 'RESOLVE CASE' : 'START CASE'}
+                                                    </Text>
+                                                    <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+                                                </TouchableOpacity>
                                             </View>
                                         </View>
                                     ))
@@ -5429,44 +5469,43 @@ export default function DashboardScreen({ navigation }) {
                                     return true;
                                 })
                                 .map((report) => (
-                                    <View key={report._id} style={styles.casesCard}>
+                                    <View key={report._id} style={styles.caseCard}>
                                         <View style={styles.caseHeader}>
-                                            <View style={[styles.priorityBadge, { backgroundColor: priorityBgColor(report.urgency) }]}>
-                                                <Text style={[styles.priorityBadgeText, { color: priorityColor(report.urgency) }]}>
+                                            <View style={styles.priorityBadge}>
+                                                <Text style={styles.priorityBadgeText}>
                                                     {priorityFromUrgency(report.urgency)}
                                                 </Text>
                                             </View>
-                                            <Text style={styles.casesCardTitle} numberOfLines={2}>
-                                                {report.description || report.category || 'Incident Report'}
+                                            <Text style={styles.caseTitle} numberOfLines={1}>
+                                                {report.category || 'Incident'}
                                             </Text>
                                         </View>
-                                        <Text style={styles.casesCardMeta}>
-                                            Case #{report._id.slice(-6).toUpperCase()}  ·  {timeAgo(report.createdAt)}  ·  {statusLabel(report.status)}
+                                        <Text style={styles.caseMeta}>
+                                            Case #{report._id.slice(-6).toUpperCase()}  ·  Submitted {new Date(report.createdAt).getHours()}:{new Date(report.createdAt).getMinutes().toString().padStart(2, '0')}  ·  {report.isAnonymous ? 'Anonymous reporter' : 'Verified reporter'}
                                         </Text>
-                                        {report.location?.address ? (
-                                            <Text style={styles.casesCardMeta}>📍 {report.location.address}</Text>
-                                        ) : null}
-                                        {report.category ? (
-                                            <Text style={styles.casesCardMeta}>Category: {report.category.replace('_', ' ')}</Text>
-                                        ) : null}
-                                        <View style={styles.casesCardFooter}>
-                                            <Text style={styles.unassignedText}>{statusLabel(report.status)}</Text>
-                                            {report.status === 'assigned' && (
-                                                <TouchableOpacity
-                                                    style={styles.assignButton}
-                                                    onPress={() => handleStartReport(report._id)}
-                                                >
-                                                    <Text style={styles.assignButtonText}>START</Text>
-                                                </TouchableOpacity>
-                                            )}
-                                            {report.status === 'in_progress' && (
-                                                <TouchableOpacity
-                                                    style={styles.outlineButton}
-                                                    onPress={() => handleResolveReport(report._id)}
-                                                >
-                                                    <Text style={styles.outlineButtonText}>RESOLVE</Text>
-                                                </TouchableOpacity>
-                                            )}
+                                        <View style={[styles.statusBadge, { backgroundColor: statusBgColor(report.status) }]}>
+                                            <Text style={[styles.statusBadgeText, { color: statusColor(report.status) }]}>{statusLabel(report.status)}</Text>
+                                        </View>
+
+                                        <View style={styles.caseDivider} />
+
+                                        <View style={styles.caseActionRow}>
+                                            <TouchableOpacity style={styles.vCircle} onPress={() => handleViewCase(report)}>
+                                                <Text style={styles.vText}>V</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={[styles.startCaseBtn, report.status === 'in_progress' && { backgroundColor: '#10B981' }]}
+                                                onPress={() => {
+                                                    if (report.status === 'assigned' || report.status === 'pending') handleStartReport(report);
+                                                    else if (report.status === 'in_progress') handleResolveReport(report._id);
+                                                    else Alert.alert('Case Info', `This case is currently ${statusLabel(report.status)}`);
+                                                }}
+                                            >
+                                                <Text style={styles.startCaseBtnText}>
+                                                    {report.status === 'in_progress' ? 'RESOLVE CASE' : 'START CASE'}
+                                                </Text>
+                                                <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+                                            </TouchableOpacity>
                                         </View>
                                     </View>
                                 ))
@@ -6051,38 +6090,126 @@ export default function DashboardScreen({ navigation }) {
                             <View style={{ height: 100 }} />
                         </ScrollView>
                     </View>
+                ) : activeTab === 'case_in_progress' && activeCase ? (
+                    <View style={styles.inProgressRoot}>
+                        <View style={styles.inProgressHeader}>
+                            <TouchableOpacity onPress={() => setActiveTab('dashboard')} style={styles.backBtnCircle}>
+                                <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                            </TouchableOpacity>
+                            <View style={styles.inProgressTitleContainer}>
+                                <Text style={styles.inProgressCaseId}>CASE #{activeCase._id.slice(-6).toUpperCase()}</Text>
+                                <View style={styles.inProgressStatusRow}>
+                                    <View style={styles.inProgressDot} />
+                                    <Text style={styles.inProgressStatusText}>IN PROGRESS</Text>
+                                </View>
+                            </View>
+                            <TouchableOpacity style={styles.backBtnCircle}>
+                                <Ionicons name="ellipsis-vertical" size={20} color="#FFFFFF" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={styles.inProgressScroll} showsVerticalScrollIndicator={false}>
+                            <View style={styles.inProgressInfoRow}>
+                                <View style={[styles.priorityBadge, { backgroundColor: priorityBgColor(activeCase.urgency) }]}>
+                                    <Text style={[styles.priorityBadgeText, { color: priorityColor(activeCase.urgency) }]}>
+                                        {priorityFromUrgency(activeCase.urgency)} PRIORITY
+                                    </Text>
+                                </View>
+                                <Text style={styles.inProgressType}>{activeCase.category?.toUpperCase() || 'INCIDENT'}</Text>
+                            </View>
+
+                            <LinearGradient
+                                colors={['#1E293B', '#0F172A']}
+                                style={styles.timerCard}
+                            >
+                                <Text style={styles.timerLabel}>ELAPSED TIME</Text>
+                                <Text style={styles.timerValue}>
+                                    {Math.floor((Date.now() - startTime) / 60000)}:
+                                    {Math.floor(((Date.now() - startTime) % 60000) / 1000).toString().padStart(2, '0')}
+                                </Text>
+                                <Text style={styles.timerSubtext}>Response targeted under 30 mins</Text>
+                            </LinearGradient>
+
+                            {/* Map Card */}
+                            <View style={styles.inProgressMapCard}>
+                                <MapView
+                                    style={styles.inProgressMap}
+                                    provider={PROVIDER_DEFAULT}
+                                    initialRegion={MINI_MAP_REGION}
+                                    customMapStyle={MINI_MAP_STYLE}
+                                />
+                                <View style={styles.mapOverlay}>
+                                    <View style={styles.locationInfo}>
+                                        <PinIcon color="#EF4444" />
+                                        <Text style={styles.locationText}>{activeCase.location?.address || 'Detecting Location...'}</Text>
+                                    </View>
+                                </View>
+                            </View>
+
+                            {/* Case Details */}
+                            <View style={styles.detailsSection}>
+                                <Text style={styles.detailsLabel}>DESCRIPTION</Text>
+                                <Text style={styles.detailsText}>
+                                    {activeCase.description || 'No additional description provided.'}
+                                </Text>
+
+                                <View style={styles.metaGrid}>
+                                    <View style={styles.metaItem}>
+                                        <Text style={styles.metaLabel}>REPORTER</Text>
+                                        <Text style={styles.metaValue}>{activeCase.isAnonymous ? 'Anonymous' : 'Verified User'}</Text>
+                                    </View>
+                                    <View style={styles.metaItem}>
+                                        <Text style={styles.metaLabel}>SUBMITTED</Text>
+                                        <Text style={styles.metaValue}>{new Date(activeCase.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </ScrollView>
+
+                        {/* Footer Action */}
+                        <View style={styles.inProgressFooter}>
+                            <TouchableOpacity
+                                style={styles.resolveLargeBtn}
+                                onPress={() => handleResolveReport(activeCase._id)}
+                            >
+                                <Text style={styles.resolveLargeBtnText}>RESOLVE CASE</Text>
+                                <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 ) : null}
 
                 {/* ── Bottom Navigation ────────────────────────────────────── */}
-                <View style={[styles.bottomNav, { paddingBottom: Math.max(insets.bottom, 12), height: 64 + Math.max(insets.bottom, 12) }]}>
-                    <TouchableOpacity style={styles.navItem} onPress={() => setActiveTab('dashboard')}>
-                        <View style={styles.navIconContainer}>
-                            <HomeIcon color={activeTab === 'dashboard' ? "#F59E0B" : "#6B7280"} />
-                        </View>
-                        <Text style={activeTab === 'dashboard' ? styles.navLabelActive : styles.navLabel}>DASHBOARD</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.navItem} onPress={() => setActiveTab('cases')}>
-                        <View style={styles.navIconContainer}>
-                            <ClipboardIcon color={activeTab === 'cases' ? "#F59E0B" : "#6B7280"} />
-                        </View>
-                        <Text style={activeTab === 'cases' ? styles.navLabelActive : styles.navLabel}>CASES</Text>
-                        {activeTab === 'cases' && <View style={styles.navIndicator} />}
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.navItem} onPress={() => setActiveTab('map')}>
-                        <View style={styles.navIconContainer}>
-                            <MapIcon color={activeTab === 'map' ? '#F59E0B' : '#6B7280'} />
-                        </View>
-                        <Text style={activeTab === 'map' ? styles.navLabelActive : styles.navLabel}>MAP</Text>
-                        {activeTab === 'map' && <View style={styles.navIndicator} />}
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.navItem} onPress={() => setActiveTab('profile')}>
-                        <View style={styles.navIconContainer}>
-                            <ProfileIcon color={activeTab === 'profile' ? "#F59E0B" : "#6B7280"} />
-                        </View>
-                        <Text style={activeTab === 'profile' ? styles.navLabelActive : styles.navLabel}>PROFILE</Text>
-                        {activeTab === 'profile' && <View style={styles.navIndicator} />}
-                    </TouchableOpacity>
-                </View>
+                {activeTab !== 'case_in_progress' && (
+                    <View style={[styles.bottomNav, { paddingBottom: Math.max(insets.bottom, 24), height: 72 + Math.max(insets.bottom, 24) }]}>
+                        <TouchableOpacity style={styles.navItem} onPress={() => setActiveTab('dashboard')}>
+                            <View style={styles.navIconContainer}>
+                                <HomeIcon color={activeTab === 'dashboard' ? "#F59E0B" : "#6B7280"} />
+                            </View>
+                            <Text style={activeTab === 'dashboard' ? styles.navLabelActive : styles.navLabel}>DASHBOARD</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.navItem} onPress={() => setActiveTab('cases')}>
+                            <View style={styles.navIconContainer}>
+                                <ClipboardIcon color={activeTab === 'cases' ? "#F59E0B" : "#6B7280"} />
+                            </View>
+                            <Text style={activeTab === 'cases' ? styles.navLabelActive : styles.navLabel}>CASES</Text>
+                            {activeTab === 'cases' && <View style={styles.navIndicator} />}
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.navItem} onPress={() => setActiveTab('map')}>
+                            <View style={styles.navIconContainer}>
+                                <MapIcon color={activeTab === 'map' ? '#F59E0B' : '#6B7280'} />
+                            </View>
+                            <Text style={activeTab === 'map' ? styles.navLabelActive : styles.navLabel}>MAP</Text>
+                            {activeTab === 'map' && <View style={styles.navIndicator} />}
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.navItem} onPress={() => setActiveTab('profile')}>
+                            <View style={styles.navIconContainer}>
+                                <ProfileIcon color={activeTab === 'profile' || activeTab === 'performance' || activeTab === 'whistleblower' ? "#F59E0B" : "#6B7280"} />
+                            </View>
+                            <Text style={activeTab === 'profile' || activeTab === 'performance' || activeTab === 'whistleblower' ? styles.navLabelActive : styles.navLabel}>PROFILE</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
             </View>
         </SafeAreaView>
@@ -6324,7 +6451,8 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingVertical: 16,
+        paddingTop: 4,
+        paddingBottom: 12,
     },
     iconButton: {
         width: 40,
@@ -6637,64 +6765,99 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     caseCard: {
-        backgroundColor: '#161F35',
+        backgroundColor: '#0D1425',
         borderRadius: 16,
-        padding: 16,
-        marginBottom: 12,
+        padding: 20,
+        marginBottom: 16,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.05)',
     },
     caseHeader: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         marginBottom: 8,
         gap: 12,
     },
     priorityBadge: {
         paddingHorizontal: 8,
-        paddingVertical: 4,
+        paddingVertical: 2,
         borderRadius: 4,
+        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+        alignSelf: 'flex-start',
     },
     priorityBadgeText: {
         fontSize: 10,
-        fontWeight: '700',
+        fontWeight: '800',
+        color: '#EF4444',
         letterSpacing: 1,
     },
     caseTitle: {
         color: '#FFFFFF',
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: 18,
+        fontWeight: '800',
         flex: 1,
-        lineHeight: 20,
     },
     caseMeta: {
         color: '#6B7280',
-        fontSize: 12,
-        marginBottom: 4,
-        marginLeft: 45,
+        fontSize: 13,
+        marginTop: 4,
     },
-    caseMetaRow: {
-        flexDirection: 'row',
-        gap: 12,
-        marginBottom: 16,
-        marginLeft: 45,
+    statusBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 6,
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        marginTop: 12,
+        alignSelf: 'flex-start',
     },
-    caseDistance: {
-        color: '#9CA3AF',
-        fontSize: 12,
+    statusBadgeText: {
+        color: '#F59E0B',
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 0.5,
     },
-    caseAnonymous: {
-        color: '#9CA3AF',
-        fontSize: 12,
+    caseDivider: {
+        height: 1,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        marginVertical: 16,
     },
-    caseFooter: {
+    caseActionRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.05)',
-        paddingTop: 16,
-        marginTop: 4,
+    },
+    vCircle: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#F59E0B',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+        elevation: 4,
+    },
+    vText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '800',
+    },
+    startCaseBtn: {
+        backgroundColor: '#3B82F6',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 10,
+        gap: 8,
+    },
+    startCaseBtnText: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '800',
+        letterSpacing: 1,
     },
     avatarRow: {
         flexDirection: 'row',
@@ -6972,6 +7135,11 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         letterSpacing: 1,
         marginBottom: 8,
+    },
+    headerInfo: {
+        paddingHorizontal: 20,
+        paddingTop: 12,
+        paddingBottom: 20,
     },
     perfGridValue: {
         color: '#FFFFFF',
@@ -7449,6 +7617,196 @@ const styles = StyleSheet.create({
         fontSize: 14,
         lineHeight: 20,
         marginBottom: 24,
+    },
+    unitStatusBadgeText: {
+        fontSize: 10,
+        fontWeight: '800',
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+    },
+    // In-Progress Screen Styles
+    inProgressRoot: {
+        flex: 1,
+        backgroundColor: '#0A0F1E',
+    },
+    inProgressHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.05)',
+    },
+    backBtnCircle: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.06)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    inProgressTitleContainer: {
+        alignItems: 'center',
+    },
+    inProgressCaseId: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '800',
+        letterSpacing: 1,
+    },
+    inProgressStatusRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginTop: 2,
+    },
+    inProgressDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#3B82F6',
+    },
+    inProgressStatusText: {
+        color: '#3B82F6',
+        fontSize: 10,
+        fontWeight: '700',
+        letterSpacing: 1,
+    },
+    inProgressScroll: {
+        flex: 1,
+        padding: 20,
+    },
+    inProgressInfoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    inProgressType: {
+        color: '#9CA3AF',
+        fontSize: 12,
+        fontWeight: '700',
+        letterSpacing: 1,
+    },
+    timerCard: {
+        padding: 24,
+        borderRadius: 20,
+        alignItems: 'center',
+        marginBottom: 24,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
+    },
+    timerLabel: {
+        color: '#64748B',
+        fontSize: 10,
+        fontWeight: '800',
+        letterSpacing: 2,
+        marginBottom: 8,
+    },
+    timerValue: {
+        color: '#FFFFFF',
+        fontSize: 48,
+        fontWeight: '800',
+        fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace',
+        marginBottom: 8,
+    },
+    timerSubtext: {
+        color: '#475569',
+        fontSize: 12,
+    },
+    inProgressMapCard: {
+        height: 200,
+        borderRadius: 20,
+        overflow: 'hidden',
+        marginBottom: 24,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
+    },
+    inProgressMap: {
+        flex: 1,
+    },
+    mapOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: 16,
+        backgroundColor: 'rgba(10, 15, 30, 0.8)',
+    },
+    locationInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    locationText: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    detailsSection: {
+        marginBottom: 40,
+    },
+    detailsLabel: {
+        color: '#64748B',
+        fontSize: 10,
+        fontWeight: '800',
+        letterSpacing: 1.5,
+        marginBottom: 12,
+    },
+    detailsText: {
+        color: '#CBD5E1',
+        fontSize: 15,
+        lineHeight: 22,
+        marginBottom: 24,
+    },
+    metaGrid: {
+        flexDirection: 'row',
+        gap: 20,
+    },
+    metaItem: {
+        flex: 1,
+        backgroundColor: 'rgba(255,255,255,0.03)',
+        padding: 16,
+        borderRadius: 12,
+    },
+    metaLabel: {
+        color: '#475569',
+        fontSize: 9,
+        fontWeight: '800',
+        marginBottom: 4,
+    },
+    metaValue: {
+        color: '#F1F5F9',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    inProgressFooter: {
+        padding: 20,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: '#0A0F1E',
+    },
+    resolveLargeBtn: {
+        backgroundColor: '#10B981',
+        flexDirection: 'row',
+        height: 56,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 12,
+        shadowColor: '#10B981',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    resolveLargeBtnText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '800',
+        letterSpacing: 1,
     },
     settingsGroup: {
         backgroundColor: '#161F35',

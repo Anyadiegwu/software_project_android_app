@@ -1,52 +1,57 @@
-// app/index.tsx
-// Entry screen — checks "Keep me signed in" and skips the welcome page if a session exists.
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import SplashScreen from '../src/typography/screens/SplashScreen';
 import WelcomeScreen from '../src/typography/screens/WelcomeScreen';
-
-const KEEP_SIGNED_IN_KEY = '@aegis_keep_signed_in';
-const SESSION_KEY        = '@aegis_session';
+import { AuthStorage } from '../src/utils/authStorage';
 
 export default function Index() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
-  const [hasSession, setHasSession] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const [nextRoute, setNextRoute] = useState<string | null>(null);
+  const [splashDone, setSplashDone] = useState(false);
 
   // On mount: check if user ticked "Keep me signed in" last time
   useEffect(() => {
     (async () => {
       try {
-        const keepSignedIn = await AsyncStorage.getItem(KEEP_SIGNED_IN_KEY);
-        const sessionString = await AsyncStorage.getItem(SESSION_KEY);
+        const keepSignedIn = await AuthStorage.isKeepSignedIn();
+        const user = await AuthStorage.getUser();
+        const token = await AuthStorage.getToken();
 
-        if (keepSignedIn === 'true' && sessionString) {
-          const session = JSON.parse(sessionString);
-          if (session.role === 'Security Personnel') {
-            router.replace('/dashboard');
+        if (keepSignedIn && user && token) {
+          // Check role (accepting both backend string and UI string for safety)
+          if (user.role === 'Security Personnel' || user.role === 'security') {
+            setNextRoute('/dashboard');
           } else {
-            router.replace('/(tabs)/home');
+            setNextRoute('/(tabs)/home');
           }
         } else {
-          setHasSession(false);
+          setNextRoute('WELCOME');
         }
-      } catch (_) {
-        setHasSession(false);
-      } finally {
-        setChecking(false);
+      } catch (e) {
+        console.error('Index: Session check failed', e);
+        setNextRoute('WELCOME');
       }
     })();
   }, []);
 
-  // Show a brief splash while we check storage
-  if (checking) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0D1117' }}>
-        <ActivityIndicator size="large" color="#45D0B1" />
-      </View>
-    );
+  // Effect to handle transition once BOTH splash is finished AND route is ready
+  useEffect(() => {
+    if (splashDone && nextRoute) {
+      if (nextRoute === 'WELCOME') {
+        setShowSplash(false);
+      } else {
+        router.replace(nextRoute as any);
+      }
+    }
+  }, [splashDone, nextRoute, router]);
+
+  const handleSplashFinish = () => {
+    setSplashDone(true);
+  };
+
+  if (showSplash) {
+    return <SplashScreen onFinish={handleSplashFinish} />;
   }
 
   // No saved session → show the welcome / role-select screen

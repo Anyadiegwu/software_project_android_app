@@ -97,13 +97,6 @@ export default function WelcomeScreen({ navigation }) {
                     </TouchableOpacity>
                 </View>
 
-                {/* Footer */}
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>Already have one? </Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('ReporterLogin')}>
-                        <Text style={styles.footerLink}>Sign in</Text>
-                    </TouchableOpacity>
-                </View>
             </Animated.View>
         </SafeAreaView>
     );
@@ -246,18 +239,4 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
 
-    footer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    footerText: {
-        fontSize: 12,
-        color: '#6B7280',
-    },
-    footerLink: {
-        fontSize: 12,
-        color: colors.caribbeanGreen,
-        fontWeight: '600',
-    },
 });
