@@ -25,7 +25,8 @@
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION"
-      ]
+      ],
+      "package": "com.veekthor.AegisSafeCommunity"
     },
     "web": {
       "output": "static",
@@ -55,6 +56,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d7f1d7a7-2bd5-4063-bb3e-f53a6fdd5989"
+      }
     }
   }
 }
