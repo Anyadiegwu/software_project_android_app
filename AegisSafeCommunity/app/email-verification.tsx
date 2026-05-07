@@ -545,7 +545,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
-import { API } from '../src/config/api';
 import { AuthStorage } from '../src/utils/authStorage';
 
 const MailCheckIcon = () => (
@@ -617,7 +616,8 @@ export default function EmailVerificationScreen() {
 
     try {
       // ── Step 1: Verify the OTP ──────────────────────────────────────────
-      const verifyResponse = await fetch(API.VERIFY_OTP, {
+      const verifyUrl = (process.env.EXPO_PUBLIC_BASE_URL || 'http://10.170.172.2:5000') + '/api/auth/verify-otp';
+      const verifyResponse = await fetch(verifyUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp: fullCode }),
@@ -632,7 +632,9 @@ export default function EmailVerificationScreen() {
 
       // ── Step 2: Auto-login so the user gets a token immediately ─────────
       const loginEndpoint =
-        role === 'security' ? API.SECURITY_LOGIN : API.REPORTER_LOGIN;
+        role === 'security'
+          ? (process.env.EXPO_PUBLIC_BASE_URL || 'http://10.170.172.2:5000') + '/api/auth/security/login'
+          : (process.env.EXPO_PUBLIC_BASE_URL || 'http://10.170.172.2:5000') + '/api/auth/reporter/login';
 
       const loginBody =
         role === 'security'
@@ -660,7 +662,7 @@ export default function EmailVerificationScreen() {
 
       // ── Step 3: Persist the token and user, then continue ───────────────
       await AuthStorage.saveSession(loginData.token, loginData.user, true); // default to keeping signed in
-      
+
       router.replace('/verification-success');
 
     } catch (err) {
@@ -674,7 +676,8 @@ export default function EmailVerificationScreen() {
     if (timer > 0) return;
 
     try {
-      const response = await fetch(API.RESEND_OTP, {
+      const resendUrl = (process.env.EXPO_PUBLIC_BASE_URL || 'http://10.170.172.2:5000') + '/api/auth/resend-otp';
+      const response = await fetch(resendUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

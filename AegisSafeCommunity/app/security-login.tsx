@@ -1,73 +1,3 @@
-// // app/security-login.tsx
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { useRouter } from 'expo-router';
-// import React, { useState } from 'react';
-// import {
-//   ActivityIndicator,
-//   Alert,
-//   KeyboardAvoidingView,
-//   Platform,
-//   ScrollView,
-//   StyleSheet,
-//   Text,
-//   TextInput,
-//   TouchableOpacity,
-//   View,
-// } from 'react-native';
-// import { SafeAreaView } from 'react-native-safe-area-context';
-// import Svg, { Path, Rect } from 'react-native-svg';
-// import { saveUserProfile } from '../src/utils/userStorage';
-
-// // ─── Icons ────────────────────────────────────────────────────────────────────
-// const BadgeIcon = () => (
-//   <Svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-//     <Rect x="3" y="4" width="18" height="16" rx="2" stroke="#F59E0B" strokeWidth="1.6" />
-//     <Path d="M8 9h8M8 13h5" stroke="#F59E0B" strokeWidth="1.6" strokeLinecap="round" />
-//     <Rect x="8" y="2" width="8" height="4" rx="1" stroke="#F59E0B" strokeWidth="1.4" />
-//   </Svg>
-// );
-
-// const KeyIcon = () => (
-//   <Svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-//     <Path
-//       d="M15 7C15 8.65685 13.6569 10 12 10C10.3431 10 9 8.65685 9 7C9 5.34315 10.3431 4 12 4C13.6569 4 15 5.34315 15 7Z"
-//       stroke="#F59E0B" strokeWidth="1.6"
-//     />
-//     <Path d="M12 10V20M9 17h6M9 20h6" stroke="#F59E0B" strokeWidth="1.6" strokeLinecap="round" />
-//   </Svg>
-// );
-
-// const EyeIcon = ({ visible }: { visible: boolean }) => (
-//   <Svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-//     {visible ? (
-//       <>
-//         <Path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#6B7280" strokeWidth="1.6" />
-//         <Path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" stroke="#6B7280" strokeWidth="1.6" />
-//       </>
-//     ) : (
-//       <>
-//         <Path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" stroke="#6B7280" strokeWidth="1.6" strokeLinecap="round" />
-//         <Path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" stroke="#6B7280" strokeWidth="1.6" strokeLinecap="round" />
-//         <Path d="M1 1l22 22" stroke="#6B7280" strokeWidth="1.6" strokeLinecap="round" />
-//       </>
-//     )}
-//   </Svg>
-// );
-
-// const ShieldIcon = () => (
-//   <Svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-//     <Path
-//       d="M12 3L4 6.5V11C4 15.4183 7.58172 19.4301 12 21C16.4183 19.4301 20 15.4183 20 11V6.5L12 3Z"
-//       stroke="#F59E0B" strokeWidth="1.6" strokeLinejoin="round"
-//     />
-//     <Path d="M9 12l2 2 4-4" stroke="#F59E0B" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-//   </Svg>
-// );
-
-// // ─── Screen ───────────────────────────────────────────────────────────────────
-// export default function SecurityLoginScreen() {
-//   const router = useRouter();
-// app/security-login.tsx
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -86,7 +16,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { saveUserProfile } from '../src/utils/userStorage';
-import { API } from '../src/config/api';
 import { AuthStorage } from '../src/utils/authStorage';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -153,7 +82,8 @@ export default function SecurityLoginScreen() {
     setLoading(true);
 
     try {
-      const response = await fetch(API.SECURITY_LOGIN, {
+      const loginUrl = (process.env.EXPO_PUBLIC_BASE_URL || 'http://10.170.172.2:5000') + '/api/auth/security/login';
+      const response = await fetch(loginUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -212,7 +142,7 @@ export default function SecurityLoginScreen() {
 
     } catch (err) {
       Alert.alert('Network Error', 'Could not reach the server. Check your connection.');
-      
+
     } finally {
       setLoading(false);
     }

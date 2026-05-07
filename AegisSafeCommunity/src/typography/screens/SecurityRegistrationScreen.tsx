@@ -14,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { colors } from '../../theme/index';
 import { saveUserProfile } from '../../utils/userStorage';
-import { API } from '../../config/api';
 import { AuthStorage } from '../../utils/authStorage';
 
 const EyeIcon = ({ visible }: { visible: boolean }) => (
@@ -65,7 +64,8 @@ export default function SecurityRegistrationScreen({ navigation }: { navigation:
         setLoading(true);
 
         try {
-            const response = await fetch(API.SECURITY_REGISTER, {
+            const regUrl = (process.env.EXPO_PUBLIC_BASE_URL || 'http://10.170.172.2:5000') + '/api/auth/security/register';
+            const response = await fetch(regUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -92,16 +92,12 @@ export default function SecurityRegistrationScreen({ navigation }: { navigation:
             });
 
             Alert.alert(
-                'Account Created',
-                'A verification OTP has been sent to your email. Please verify to continue.',
+                'Registration Successful',
+                'Your officer account has been created. Please wait for administrative approval before you can sign in. This process typically takes 24-48 hours.',
                 [
                     {
-                        text: 'Verify Now',
-                        onPress: () => navigation.navigate('EmailVerification', {
-                            email: form.workEmail.trim().toLowerCase(),
-                            password: form.password,
-                            role: 'security',
-                        }),
+                        text: 'Go to Login',
+                        onPress: () => navigation.navigate('SecurityLogin'),
                     },
                 ]
             );

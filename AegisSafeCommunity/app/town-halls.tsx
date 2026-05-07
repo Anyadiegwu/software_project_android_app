@@ -956,7 +956,8 @@ import { useRouter } from 'expo-router';
 import { AuthStorage } from '../src/utils/authStorage';
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.170.172.21:5000/api';
+// Direct access to environment variable
+const getBaseUrl = () => process.env.EXPO_PUBLIC_BASE_URL || 'http://10.170.172.2:5000';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Attendee = { initials: string; color: string };
@@ -1106,7 +1107,7 @@ export default function TownHallsScreen() {
   const fetchUpcoming = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_BASE}/townhalls/upcoming`, {
+      const res = await fetch(`${getBaseUrl()}/api/townhalls/upcoming`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(`Server error ${res.status}`);
@@ -1117,7 +1118,7 @@ export default function TownHallsScreen() {
       const registered = new Set<string>();
       for (const th of data) {
         try {
-          const statusRes = await fetch(`${API_BASE}/townhalls/${th._id}/registration-status`, {
+          const statusRes = await fetch(`${getBaseUrl()}/api/townhalls/${th._id}/registration-status`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (statusRes.ok) {
@@ -1137,7 +1138,7 @@ export default function TownHallsScreen() {
   const fetchPast = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_BASE}/townhalls/past`, {
+      const res = await fetch(`${getBaseUrl()}/api/townhalls/past`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(`Server error ${res.status}`);
@@ -1171,9 +1172,8 @@ export default function TownHallsScreen() {
     if (!token) return;
     try {
       const isRegistered = registeredIds.has(townHallId);
-      
       const endpoint = isRegistered ? 'unregister' : 'register';
-      const res = await fetch(`${API_BASE}/townhalls/${townHallId}/${endpoint}`, {
+      const response = await fetch(`${getBaseUrl()}/api/townhalls/${townHallId}/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1181,8 +1181,8 @@ export default function TownHallsScreen() {
         },
       });
       
-      if (!res.ok) {
-        const data = await res.json();
+      if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.message || 'Failed');
       }
       

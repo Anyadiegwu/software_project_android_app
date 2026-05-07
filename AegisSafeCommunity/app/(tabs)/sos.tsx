@@ -639,7 +639,7 @@ import { useRouter } from 'expo-router';
 import { AuthStorage } from '../../src/utils/authStorage';
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.170.172.21:5000';
+const getBaseUrl = () => process.env.EXPO_PUBLIC_BASE_URL || 'http://10.170.172.2:5000';
 
 // ─── Amber Checkmark Icon ────────────────────────────────────────────────────────
 function CheckIcon() {
@@ -821,7 +821,8 @@ export default function SosTab() {
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/api/reporter/distress`, {
+      const distressUrl = `${getBaseUrl()}/api/reporter/distress`;
+      const res = await fetch(distressUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

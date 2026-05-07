@@ -15,7 +15,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { colors } from '../../theme/index';
-import { API } from '../../config/api';
 import { AuthStorage } from '../../utils/authStorage';
 
 const EyeIcon = ({ visible }) => (
@@ -54,7 +53,8 @@ export default function ReporterLoginScreen({ navigation }) {
         setLoading(true);
 
         try {
-            const response = await fetch(API.REPORTER_LOGIN, {
+            const loginUrl = (process.env.EXPO_PUBLIC_BASE_URL || 'http://10.170.172.2:5000') + '/api/auth/reporter/login';
+            const response = await fetch(loginUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
