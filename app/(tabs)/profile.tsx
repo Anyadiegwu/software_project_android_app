@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path, Circle, Rect, Polyline, Line } from 'react-native-svg';
-import { colors } from '../../src/theme/index';
-import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { clearUserSession, getInitials, loadUserProfile } from '../../src/utils/userStorage';
 
 // ─── Menu SVG Icons (amber #F59E0B) ───────────────────────────────────────────────
@@ -75,6 +74,7 @@ const MENU_ITEMS = [
 ];
 
 export default function ProfileTab() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [displayName, setDisplayName] = useState('Community Member');
   const [initials,    setInitials]    = useState('CM');
@@ -142,7 +142,7 @@ export default function ProfileTab() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom + 25, 100) }]}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.avatar}>

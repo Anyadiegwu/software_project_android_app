@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import SplashScreen from '../src/typography/screens/SplashScreen';
 import WelcomeScreen from '../src/typography/screens/WelcomeScreen';
 import { AuthStorage } from '../src/utils/authStorage';
+import { SessionRecovery } from '../src/utils/sessionRecovery';
 
 export default function Index() {
   const router = useRouter();
@@ -14,6 +15,9 @@ export default function Index() {
   useEffect(() => {
     (async () => {
       try {
+        // First, try to recover session from crash
+        const recovered = await SessionRecovery.attemptRecovery();
+
         const keepSignedIn = await AuthStorage.isKeepSignedIn();
         const user = await AuthStorage.getUser();
         const token = await AuthStorage.getToken();

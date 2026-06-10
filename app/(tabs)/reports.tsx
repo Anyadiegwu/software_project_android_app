@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AuthStorage } from '../../src/utils/authStorage';
 import { BASE_URL } from '../../src/config/api';
@@ -216,6 +216,7 @@ function ReportCard({ item }: { item: Report }) {
 const FILTER_TABS: FilterTab[] = ['ALL', 'UNDER REVIEW', 'IN PROGRESS', 'RESOLVED', 'DRAFTS'];
 
 export default function ReportsTab() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{ newReport?: string }>();
 
@@ -341,7 +342,7 @@ export default function ReportsTab() {
           data={filtered}
           keyExtractor={item => item.id}
           renderItem={({ item }) => <ReportCard item={item} />}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: Math.max(insets.bottom + 25, 100) }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl

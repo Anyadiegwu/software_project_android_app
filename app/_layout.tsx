@@ -3,9 +3,12 @@
 // Expo Router uses this file as the navigation shell (NOT App.js).
 
 import { Stack } from 'expo-router';
-import { StatusBar } from 'react-native';
+import { LogBox, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors } from '../src/theme/index';
+
+// Suppress yellow box warnings (show in console instead)
+LogBox.ignoreAllLogs(false);
 
 export default function RootLayout() {
   return (

@@ -1,21 +1,21 @@
+import * as Location from 'expo-location';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Alert,
-  Animated,
-  Linking,
-  Platform,
-  Share,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  Vibration,
-  View,
+    Alert,
+    Animated,
+    Linking,
+    Platform,
+    Share,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    Vibration,
+    View,
 } from 'react-native';
-import * as Location from 'expo-location';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { BASE_URL } from '../../src/config/api';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { AuthStorage } from '../../src/utils/authStorage';
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
@@ -196,26 +196,31 @@ export default function SosTab() {
   // ── Trigger distress signal to backend ──────────────────────────────────────
   const triggerDistress = useCallback(async () => {
     if (!token) {
-      console.warn('No token available for distress signal');
       return;
     }
     try {
       const distressUrl = `${BASE_URL}/api/reporter/distress`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      
       const res = await fetch(distressUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-      });
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timeoutId));
+      
       if (!res.ok) {
         console.error('Distress signal failed:', res.status);
-      } else {
-        const data = await res.json();
-        console.log('Distress signal sent:', data.report?._id);
       }
     } catch (err) {
-      console.error('Distress signal error:', err);
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.error('Distress signal timeout');
+      } else {
+        console.error('Distress signal error');
+      }
     }
   }, [token]);
 

@@ -1,11 +1,21 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import MainHomeScreen from '../../src/typography/screens/MainHomeScreen';
+import { SessionRecovery } from '../../src/utils/sessionRecovery';
 import { loadUserProfile } from '../../src/utils/userStorage';
 
 export default function HomeTab() {
   const router = useRouter();
   const [userName, setUserName] = useState('Community Member');
+
+  // Save session recovery state periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      SessionRecovery.saveRecoveryState();
+    }, 60000); // Every 60 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Load saved user name on mount
   useEffect(() => {

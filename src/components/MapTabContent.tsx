@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT, Region } from 'react-native-maps';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthStorage } from '../utils/authStorage';
 import { BASE_URL } from '../config/api';
 
@@ -80,6 +80,7 @@ interface MapPin {
 }
 
 export default function MapTab() {
+  const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
 
   const [activeFilter, setActiveFilter] = useState('all');

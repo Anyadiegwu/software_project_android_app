@@ -18,7 +18,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
-import { BASE_URL } from '../../config/api';
+import { BASE_URL, fetchWithTimeout } from '../../config/api';
 import { colors } from '../../theme/index';
 import { AuthStorage } from '../../utils/authStorage';
 
@@ -231,13 +231,14 @@ export default function ReportIncidentScreen({ navigation }) {
             if (!reportBody.description) console.warn('[ReportIncident] Warning: no description');
 
             // ── POST the report ───────────────────────────────────────────────
-            const response = await fetch(`${BASE_URL}/api/reporter/report`, {
+            const response = await fetchWithTimeout(`${BASE_URL}/api/reporter/report`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify(reportBody),
+                timeout: 20000, // 20s for report submission
             });
 
             const data = await response.json();
@@ -271,13 +272,14 @@ export default function ReportIncidentScreen({ navigation }) {
                     // Resolves to: POST /api/reporter/report/:id/evidence
                     const evidenceUrl = `${BASE_URL}/api/reporter/report/${reportId}/evidence`;
 
-                    const evidenceResponse = await fetch(evidenceUrl, {
+                    const evidenceResponse = await fetchWithTimeout(evidenceUrl, {
                         method: 'POST',
                         headers: {
                             // ⚠️ Do NOT set Content-Type — let fetch set it with the multipart boundary
                             Authorization: `Bearer ${token}`,
                         },
                         body: formData,
+                        timeout: 30000, // 30s for file uploads
                     });
 
                     if (!evidenceResponse.ok) {

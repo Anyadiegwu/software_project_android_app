@@ -8,11 +8,12 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import SideDrawer from '../../components/SideDrawer';
+import { BASE_URL } from '../../config/api';
+import { colors } from '../../theme/index';
 import { AuthStorage } from '../../utils/authStorage';
-import { colors } from '../../theme/index';import { BASE_URL } from '../../config/api';
 // ─── Icons (unchanged) ────────────────────────────────────────────────────────
 
 const TrackReportIcon = () => (
@@ -47,6 +48,7 @@ const CommunityIcon = () => (
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function MainHomeScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     // ── Data state ──────────────────────────────────────────────────────────
@@ -200,7 +202,7 @@ export default function MainHomeScreen({ navigation }) {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom + 25, 100) }]} showsVerticalScrollIndicator={false}>
 
                 {/* Greeting */}
                 <View style={styles.greetingSection}>

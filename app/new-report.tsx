@@ -17,7 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { AuthStorage } from '.././src/utils/authStorage';
-import { BASE_URL } from '../src/config/api';
+import { BASE_URL, fetchWithTimeout } from '../src/config/api';
 
 // ─── Incident type icons (SVG paths) ─────────────────────────────────────────
 const GunIcon = () => (
@@ -609,13 +609,14 @@ export default function NewReportScreen() {
       };
 
       const reportUrl = `${BASE_URL}/api/reporter/report`;
-      const response = await fetch(reportUrl, {
+      const response = await fetchWithTimeout(reportUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(reportBody),
+        timeout: 20000, // 20s for report submission
       });
 
       const data = await response.json();
@@ -646,19 +647,20 @@ export default function NewReportScreen() {
           });
 
           const evidenceUrl = `${BASE_URL}/api/reporter/report/${reportId}/evidence`;
-          console.log('[NewReport] uploading evidence →', evidenceUrl);
 
-          const evidenceResponse = await fetch(evidenceUrl, {
+          const evidenceResponse = await fetchWithTimeout(evidenceUrl, {
             method: 'POST',
             headers: {
               // Do NOT set Content-Type — let fetch set it with the multipart boundary
               Authorization: `Bearer ${token}`,
             },
             body: formData,
+            timeout: 30000, // 30s for large file uploads
           });
 
           if (!evidenceResponse.ok) {
-            console.warn('[NewReport] evidence upload failed:', await evidenceResponse.text());
+            // Report already saved — don't block user with full error text
+            console.error('[NewReport] upload status:', evidenceResponse.status);
             Alert.alert(
               'Report Saved',
               'Your report was submitted but the evidence files could not be uploaded. You can add them later.'
@@ -666,7 +668,7 @@ export default function NewReportScreen() {
           }
         } catch (evidenceErr) {
           // Non-blocking — the report itself was saved successfully
-          console.warn('[NewReport] evidence upload error:', evidenceErr);
+          console.error('[NewReport] upload error (non-fatal)');
         }
       }
 

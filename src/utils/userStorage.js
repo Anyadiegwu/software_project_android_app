@@ -18,7 +18,7 @@ export async function saveUserProfile(profile) {
     try {
         await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
     } catch (e) {
-        console.warn('userStorage: failed to save profile', e);
+        console.warn('userStorage: failed to save profile');
     }
 }
 
@@ -31,7 +31,7 @@ export async function loadUserProfile() {
         const raw = await AsyncStorage.getItem(USER_PROFILE_KEY);
         return raw ? JSON.parse(raw) : null;
     } catch (e) {
-        console.warn('userStorage: failed to load profile', e);
+        console.warn('userStorage: failed to load profile');
         return null;
     }
 }
@@ -43,7 +43,7 @@ export async function clearUserSession() {
     try {
         await AsyncStorage.multiRemove([USER_PROFILE_KEY, KEEP_SIGNED_IN_KEY, SESSION_KEY]);
     } catch (e) {
-        console.warn('userStorage: failed to clear session', e);
+        console.warn('userStorage: failed to clear session');
     }
 }
 

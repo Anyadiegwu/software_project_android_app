@@ -1,6 +1,30 @@
 
 export const BASE_URL = "https://software-project-backend-api.onrender.com";
 
+/**
+ * Fetch wrapper with timeout to prevent hangs on slow/lost connections
+ * Default timeout: 15 seconds (configurable per request)
+ */
+export const fetchWithTimeout = async (
+  url: string,
+  options?: RequestInit & { timeout?: number }
+): Promise<Response> => {
+  const timeout = options?.timeout || 15000; // Default 15s
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
 
 export const API = {
   // ── Auth ────────────────────────────────────────────────────────────────────

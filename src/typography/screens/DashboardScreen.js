@@ -433,7 +433,6 @@ export default function DashboardScreen({ navigation }) {
         setActiveTab('case_in_progress');
 
         if (!token) {
-            console.warn('No auth token found, UI transitioned but API call skipped.');
             return;
         }
 
