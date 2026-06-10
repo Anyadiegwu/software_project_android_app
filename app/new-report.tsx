@@ -608,8 +608,6 @@ export default function NewReportScreen() {
         }),
       };
 
-      console.log('[NewReport] body →', JSON.stringify(reportBody, null, 2));
-
       const reportUrl = `${BASE_URL}/api/reporter/report`;
       const response = await fetch(reportUrl, {
         method: 'POST',
@@ -622,8 +620,8 @@ export default function NewReportScreen() {
 
       const data = await response.json();
 
-      console.log('[NewReport] response status →', response.status);
-      console.log('[NewReport] response data →', JSON.stringify(data, null, 2));
+      // Log only status for safety, not full response
+      if (!response.ok) console.error('[NewReport] submit failed - status:', response.status);
 
       if (!response.ok) {
         Alert.alert(

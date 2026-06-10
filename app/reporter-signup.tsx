@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { BASE_URL } from '../src/config/api';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
@@ -59,6 +59,8 @@ const EyeIcon = ({ visible }: { visible: boolean }) => (
 
 export default function ReporterSignUpScreen() {
   const router = useRouter();
+
+  const insets = useSafeAreaInsets();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -155,7 +157,7 @@ export default function ReporterSignUpScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 25 }]} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>{"Join your local Community Watch and start making a difference today."}</Text>
 

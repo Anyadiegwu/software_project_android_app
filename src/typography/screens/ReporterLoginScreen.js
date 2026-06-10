@@ -12,7 +12,7 @@ import {
     View,
     Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { colors } from '../../theme/index';
 import { AuthStorage } from '../../utils/authStorage';
@@ -36,6 +36,7 @@ const EyeIcon = ({ visible }) => (
 );
 
 export default function ReporterLoginScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     const [loading,      setLoading]      = useState(false);
     const [keepSignedIn, setKeepSignedIn] = useState(false);
     const [form, setForm] = useState({ email: '', password: '' });
@@ -115,7 +116,7 @@ export default function ReporterLoginScreen({ navigation }) {
             </View>
 
             <ScrollView
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 25 }]}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >

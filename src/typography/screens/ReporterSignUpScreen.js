@@ -9,11 +9,12 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/index';
 import { saveUserProfile } from '../../utils/userStorage';
 
 export default function ReporterSignUpScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     const [loading, setLoading]             = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [form, setForm] = useState({
@@ -63,7 +64,7 @@ export default function ReporterSignUpScreen({ navigation }) {
             </View>
 
             <ScrollView
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 25 }]}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >

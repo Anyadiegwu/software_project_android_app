@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { saveUserProfile } from '../src/utils/userStorage';
 import { AuthStorage } from '../src/utils/authStorage';
@@ -68,6 +68,7 @@ const ShieldIcon = () => (
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function SecurityLoginScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [badge, setBadge] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -164,7 +165,7 @@ export default function SecurityLoginScreen() {
         </View>
 
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 25 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >

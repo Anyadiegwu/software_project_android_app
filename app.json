@@ -19,6 +19,8 @@
         "backgroundColor": "#0A0F1E",
         "foregroundImage": "./assets/images/image.png"
       },
+      "jsEngine": "hermes",
+      "enableProguardInReleaseBuilds": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
@@ -49,7 +51,8 @@
             "backgroundColor": "#0A0F1E"
           }
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

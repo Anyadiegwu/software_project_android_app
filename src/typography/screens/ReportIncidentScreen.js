@@ -1,9 +1,10 @@
-import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -13,14 +14,13 @@ import {
     TextInput,
     TouchableOpacity,
     View,
-    Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import { BASE_URL } from '../../config/api';
 import { colors } from '../../theme/index';
 import { AuthStorage } from '../../utils/authStorage';
-import { BASE_URL } from '../../config/api';
 
 const LightningIcon = () => (
     <Svg width="28" height="28" viewBox="0 0 24 24" fill="none">
@@ -149,14 +149,17 @@ export default function ReportIncidentScreen({ navigation }) {
         } catch (err) {
             setLocationPrimary('Could not get location');
             setLocationSecondary('Tap "Refresh Location" to retry');
-            console.error('Location error:', err);
+            console.error('Location error (code only)');
         } finally {
             setLocationLoading(false);
         }
     };
 
-    // ── Pick evidence files ───────────────────────────────────────────────────
+    // ── Pick evidence files — with limits & compression ───────────────────────
     const handlePickFiles = async () => {
+        const MAX_FILES = 3;
+        const MAX_FILE_SIZE_MB = 10; // Per-file limit
+
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
             Alert.alert('Permission needed', 'Please allow access to your photo library.');
@@ -165,10 +168,19 @@ export default function ReportIncidentScreen({ navigation }) {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
             allowsMultipleSelection: true,
-            quality: 0.8,
+            quality: 0.7, // Reduced quality to decrease file size
         });
         if (!result.canceled) {
-            setEvidenceFiles(result.assets);
+            // Filter: max 3 files, each under 10MB
+            const filtered = result.assets.filter((asset) => {
+                if (!asset.fileSize) return true; // Allow if size unknown
+                return asset.fileSize / (1024 * 1024) <= MAX_FILE_SIZE_MB;
+            }).slice(0, MAX_FILES);
+
+            if (filtered.length < result.assets.length) {
+                Alert.alert('Files Limited', `Selected only first ${filtered.length} file(s). Max 3 files, 10MB each.`);
+            }
+            setEvidenceFiles(filtered);
         }
     };
 
@@ -213,10 +225,10 @@ export default function ReportIncidentScreen({ navigation }) {
                 }),
             };
 
-            // ── Debug logs — remove before shipping to production ─────────────
+            // ── Send report (debug logs removed for production) ─────────────
             const createUrl = `${BASE_URL}/api/reporter/report`;
-            console.log('[ReportIncident] POST →', createUrl);
-            console.log('[ReportIncident] body →', JSON.stringify(reportBody, null, 2));
+            // Guard: Log only essential errors, not full payloads (prevents memory spikes)
+            if (!reportBody.description) console.warn('[ReportIncident] Warning: no description');
 
             // ── POST the report ───────────────────────────────────────────────
             const response = await fetch(`${BASE_URL}/api/reporter/report`, {
@@ -230,8 +242,8 @@ export default function ReportIncidentScreen({ navigation }) {
 
             const data = await response.json();
 
-            console.log('[ReportIncident] response status →', response.status);
-            console.log('[ReportIncident] response data →', JSON.stringify(data, null, 2));
+            // Log only status code, not full response (memory safety)
+            if (!response.ok) console.error('[ReportIncident] error status:', response.status);
 
             if (!response.ok) {
                 Alert.alert(
@@ -258,7 +270,6 @@ export default function ReportIncidentScreen({ navigation }) {
 
                     // Resolves to: POST /api/reporter/report/:id/evidence
                     const evidenceUrl = `${BASE_URL}/api/reporter/report/${reportId}/evidence`;
-                    console.log('[ReportIncident] uploading evidence →', evidenceUrl);
 
                     const evidenceResponse = await fetch(evidenceUrl, {
                         method: 'POST',
@@ -271,7 +282,8 @@ export default function ReportIncidentScreen({ navigation }) {
 
                     if (!evidenceResponse.ok) {
                         // Report is already saved — don't block the user
-                        console.warn('[ReportIncident] evidence upload failed:', await evidenceResponse.text());
+                        // Only log error code, not full response text
+                        console.error('[ReportIncident] upload status:', evidenceResponse.status);
                         Alert.alert(
                             'Report Saved',
                             'Your report was submitted but the evidence files could not be uploaded. You can add them later.'
@@ -279,7 +291,7 @@ export default function ReportIncidentScreen({ navigation }) {
                     }
                 } catch (evidenceErr) {
                     // Non-blocking — the report itself was saved successfully
-                    console.warn('[ReportIncident] evidence upload error:', evidenceErr);
+                    console.error('[ReportIncident] upload error (non-fatal)');
                 }
             }
 
@@ -288,7 +300,7 @@ export default function ReportIncidentScreen({ navigation }) {
 
         } catch (err) {
             Alert.alert('Network Error', 'Could not reach the server. Check your connection and try again.');
-            console.error('[ReportIncident] submit error:', err);
+            console.error('[ReportIncident] error (safety: not logging full error object)');
         } finally {
             setSubmitting(false);
         }
@@ -476,10 +488,10 @@ export default function ReportIncidentScreen({ navigation }) {
                 <Text style={styles.uploadIcon}>📷</Text>
                 <Text style={styles.uploadText}>
                     {evidenceFiles.length > 0
-                        ? `${evidenceFiles.length} file(s) selected`
+                        ? `${evidenceFiles.length}/3 file(s) selected`
                         : 'Tap to upload photos or videos'}
                 </Text>
-                <Text style={styles.uploadSubtext}>Max file size: 50MB</Text>
+                <Text style={styles.uploadSubtext}>Max 3 files, 10MB each (compressed)</Text>
             </TouchableOpacity>
 
             <View style={styles.switchContainer}>
@@ -587,7 +599,11 @@ export default function ReportIncidentScreen({ navigation }) {
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 <ScrollView
-                    contentContainerStyle={step === 6 ? styles.scrollContentSuccess : styles.scrollContent}
+                    contentContainerStyle={
+                        step === 6
+                            ? [styles.scrollContentSuccess, { paddingBottom: insets.bottom + 25 }]
+                            : [styles.scrollContent, { paddingBottom: insets.bottom + 25 }]
+                    }
                     showsVerticalScrollIndicator={false}
                 >
                     {step === 1 ? renderStep1() : null}

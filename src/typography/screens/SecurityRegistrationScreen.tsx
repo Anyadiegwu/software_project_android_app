@@ -10,7 +10,7 @@ import {
     View,
     Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { colors } from '../../theme/index';
 import { saveUserProfile } from '../../utils/userStorage';
@@ -35,6 +35,7 @@ const EyeIcon = ({ visible }: { visible: boolean }) => (
 );
 
 export default function SecurityRegistrationScreen({ navigation }: { navigation: any }) {
+    const insets = useSafeAreaInsets();
     const [loading, setLoading] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [form, setForm] = useState({
@@ -119,7 +120,7 @@ export default function SecurityRegistrationScreen({ navigation }: { navigation:
             </View>
 
             <ScrollView
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 25 }]}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >
